@@ -9,6 +9,7 @@ Shared Claude Code settings for this repository. These settings are committed to
 The `permissions.allow` array contains pre-approved Bash commands that Claude Code can execute without requiring user permission each time.
 
 **Maintenance requirements:**
+
 - Keep the array **sorted alphabetically** for easy scanning and maintenance
 - **Only include non-destructive commands** in the shared `settings.json` file
   - Read-only operations (e.g., `view`, `list`, `diff`, `fetch`)
