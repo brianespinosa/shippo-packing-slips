@@ -1,3 +1,5 @@
+import type { Order } from 'shippo/models/components';
+
 import { Shippo } from 'shippo';
 
 /**
@@ -26,8 +28,8 @@ export function createShippoClient(): Shippo {
  */
 export async function fetchOrders(
   startDate: Date,
-  endDate: Date
-): Promise<any[]> {
+  endDate: Date,
+): Promise<Order[]> {
   const client = createShippoClient();
 
   // Convert dates to ISO 8601 format (required by Shippo API)
@@ -35,17 +37,17 @@ export async function fetchOrders(
   const endDateISO = endDate.toISOString();
 
   try {
-    const allOrders: any[] = [];
+    const allOrders: Order[] = [];
     let page = 1;
     let hasMore = true;
 
     while (hasMore) {
       // Fetch orders for current page
       const response = await client.orders.list({
+        endDate: endDateISO,
         page,
         results: 25, // Default page size
         startDate: startDateISO,
-        endDate: endDateISO,
       });
 
       // Add orders from this page to our collection
