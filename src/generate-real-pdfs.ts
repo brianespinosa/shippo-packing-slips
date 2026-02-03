@@ -1,8 +1,12 @@
+import { exec } from 'child_process';
 import dotenv from 'dotenv';
 import path from 'path';
+import { promisify } from 'util';
 
 import { generatePackingSlip } from './lib/pdf-generator';
 import { fetchOrders } from './lib/shippo';
+
+const execAsync = promisify(exec);
 
 // Load environment variables
 dotenv.config({ path: '.env.local' });
@@ -68,6 +72,15 @@ async function generateRealPDFs() {
         console.log(`  Order: ${orderNumber}`);
         console.log(`  Items: ${order.lineItems?.length || 0}`);
         console.log(`  Ship to: ${order.toAddress?.name || 'N/A'}`);
+
+        // Open the PDF file
+        try {
+          await execAsync(`open "${outputPath}"`);
+          console.log(`  Opened PDF`);
+        } catch (openError) {
+          console.log(`  (Could not auto-open PDF)`);
+        }
+
         console.log('');
         successCount++;
       } catch (error) {
@@ -88,11 +101,6 @@ async function generateRealPDFs() {
     console.log(`  Errors: ${errorCount}`);
     console.log(`  Output directory: ${outputDir}`);
     console.log('='.repeat(50));
-
-    if (successCount > 0) {
-      console.log('\nTo view PDFs:');
-      console.log(`  open ${outputDir}`);
-    }
 
     process.exit(errorCount > 0 ? 1 : 0);
   } catch (error) {
