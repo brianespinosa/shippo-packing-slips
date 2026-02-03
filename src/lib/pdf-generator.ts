@@ -124,6 +124,27 @@ export async function generatePackingSlip(
 }
 
 /**
+ * Calculate the height needed to render a line item
+ * @param item - Line item to measure
+ * @param singleLineHeight - Height of a single line of text
+ * @returns Total height needed including padding
+ */
+function calculateItemHeight(
+  item: NonNullable<Order['lineItems']>[number],
+  singleLineHeight: number,
+): number {
+  let height = TABLE_ROW_PADDING + singleLineHeight; // Top padding + title
+
+  if (item.variantTitle) {
+    height += singleLineHeight; // Variant title
+  }
+
+  height += TABLE_ROW_PADDING; // Bottom padding
+
+  return height;
+}
+
+/**
  * Render the header section of the packing slip
  * @param doc - PDFKit document instance
  * @param order - Order object from Shippo API
@@ -261,7 +282,11 @@ function renderHeader(
   });
   doc
     .font('Inter')
-    .text(order.orderNumber || order.objectId || 'N/A', valueColumnStart, orderDetailsY);
+    .text(
+      order.orderNumber || order.objectId || 'N/A',
+      valueColumnStart,
+      orderDetailsY,
+    );
   orderDetailsY += LINE_HEIGHT;
 
   // Order Date with right-aligned label and left-aligned value
@@ -290,64 +315,6 @@ function renderHeader(
 
   // Move y past whichever section is taller
   y = Math.max(shipToEndY, orderDetailsY) + SECTION_SPACING;
-
-  return y;
-}
-
-/**
- * Calculate the height needed to render a line item
- * @param item - Line item to measure
- * @param singleLineHeight - Height of a single line of text
- * @returns Total height needed including padding
- */
-function calculateItemHeight(
-  item: NonNullable<Order['lineItems']>[number],
-  singleLineHeight: number,
-): number {
-  let height = TABLE_ROW_PADDING + singleLineHeight; // Top padding + title
-
-  if (item.variantTitle) {
-    height += singleLineHeight; // Variant title
-  }
-
-  height += TABLE_ROW_PADDING; // Bottom padding
-
-  return height;
-}
-
-/**
- * Render table headers for the items table
- * @param doc - PDFKit document instance
- * @param itemsColumnX - X position for items column
- * @param qtyColumnX - X position for quantity column
- * @param startY - Y position to start rendering
- * @returns New Y position after rendering headers
- */
-function renderTableHeaders(
-  doc: PDFKit.PDFDocument,
-  itemsColumnX: number,
-  qtyColumnX: number,
-  startY: number,
-): number {
-  let y = startY;
-  doc
-    .font('Inter-Bold')
-    .text('ITEMS', itemsColumnX, y)
-    .text('QTY', qtyColumnX, y, {
-      align: 'right',
-      width: TABLE_QTY_COLUMN_WIDTH,
-    });
-  y += LINE_HEIGHT;
-
-  // Draw a thick line under headers (full width)
-  doc
-    .lineWidth(TABLE_HEADER_LINE_WIDTH)
-    .moveTo(0, y)
-    .lineTo(PAGE_WIDTH, y)
-    .stroke();
-
-  // Reset to regular font for line items
-  doc.font('Inter');
 
   return y;
 }
@@ -456,6 +423,43 @@ function renderItemsTable(
         .stroke();
     }
   }
+
+  return y;
+}
+
+/**
+ * Render table headers for the items table
+ * @param doc - PDFKit document instance
+ * @param itemsColumnX - X position for items column
+ * @param qtyColumnX - X position for quantity column
+ * @param startY - Y position to start rendering
+ * @returns New Y position after rendering headers
+ */
+function renderTableHeaders(
+  doc: PDFKit.PDFDocument,
+  itemsColumnX: number,
+  qtyColumnX: number,
+  startY: number,
+): number {
+  let y = startY;
+  doc
+    .font('Inter-Bold')
+    .text('ITEMS', itemsColumnX, y)
+    .text('QTY', qtyColumnX, y, {
+      align: 'right',
+      width: TABLE_QTY_COLUMN_WIDTH,
+    });
+  y += LINE_HEIGHT;
+
+  // Draw a thick line under headers (full width)
+  doc
+    .lineWidth(TABLE_HEADER_LINE_WIDTH)
+    .moveTo(0, y)
+    .lineTo(PAGE_WIDTH, y)
+    .stroke();
+
+  // Reset to regular font for line items
+  doc.font('Inter');
 
   return y;
 }
