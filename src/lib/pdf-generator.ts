@@ -23,6 +23,32 @@ const SECTION_LINE_HEIGHT = LINE_HEIGHT * 0.8;
 const SECTION_SPACING = 16;
 
 /**
+ * Typography settings
+ */
+const DEFAULT_FONT_SIZE = 8;
+const TITLE_EXTRA_SPACING = 6; // Extra space after title to match top margin
+
+/**
+ * Logo and address layout
+ */
+const LOGO_TEXT_VERTICAL_OFFSET = SECTION_LINE_HEIGHT * 0.25; // Lower text relative to logo
+const LOGO_TEXT_GAP = SECTION_SPACING / 2; // Horizontal gap between logo and text
+
+/**
+ * Order details column layout
+ */
+const LABEL_VALUE_GAP = 4; // Gap between right-aligned labels and left-aligned values
+
+/**
+ * Table styling
+ */
+const TABLE_HEADER_LINE_WIDTH = 2;
+const TABLE_SEPARATOR_LINE_WIDTH = 0.5;
+const TABLE_QTY_COLUMN_WIDTH = 30;
+const TABLE_COLUMN_GAP = 10; // Gap between items and quantity columns
+const TABLE_ROW_PADDING = 6; // Vertical padding top and bottom of each row
+
+/**
  * Business information for "From" address
  * TODO: Move to configuration file
  */
@@ -64,7 +90,7 @@ export async function generatePackingSlip(
       doc.pipe(stream);
 
       // Set default font and size for entire document
-      doc.font('Inter').fontSize(8);
+      doc.font('Inter').fontSize(DEFAULT_FONT_SIZE);
 
       // Track vertical position
       let y = MARGIN;
@@ -98,6 +124,27 @@ export async function generatePackingSlip(
 }
 
 /**
+ * Calculate the height needed to render a line item
+ * @param item - Line item to measure
+ * @param singleLineHeight - Height of a single line of text
+ * @returns Total height needed including padding
+ */
+function calculateItemHeight(
+  item: NonNullable<Order['lineItems']>[number],
+  singleLineHeight: number,
+): number {
+  let height = TABLE_ROW_PADDING + singleLineHeight; // Top padding + title
+
+  if (item.variantTitle) {
+    height += singleLineHeight; // Variant title
+  }
+
+  height += TABLE_ROW_PADDING; // Bottom padding
+
+  return height;
+}
+
+/**
  * Render the header section of the packing slip
  * @param doc - PDFKit document instance
  * @param order - Order object from Shippo API
@@ -121,15 +168,18 @@ function renderHeader(
         width: PAGE_WIDTH - 2 * MARGIN,
       },
     );
-  y += LINE_HEIGHT + 6; // Add extra spacing after title to match top margin
+  y += LINE_HEIGHT + TITLE_EXTRA_SPACING;
 
   // Draw a thin line under title (full width)
-  doc.lineWidth(0.5).moveTo(0, y).lineTo(PAGE_WIDTH, y).stroke();
+  doc
+    .lineWidth(TABLE_SEPARATOR_LINE_WIDTH)
+    .moveTo(0, y)
+    .lineTo(PAGE_WIDTH, y)
+    .stroke();
   y += SECTION_SPACING / 2;
 
   // Logo and From Address section - centered horizontally
   const logoPath = path.join(process.cwd(), 'src/assets/bork_logo_bw.png');
-  const spacing = SECTION_SPACING / 2;
 
   // Measure actual text widths to calculate proper centering
   doc.font('Inter-Bold');
@@ -144,7 +194,7 @@ function renderHeader(
   const maxTextWidth = Math.max(nameWidth, streetWidth, cityWidth);
 
   // Calculate total width and center it
-  const totalWidth = LOGO_WIDTH + spacing + maxTextWidth;
+  const totalWidth = LOGO_WIDTH + LOGO_TEXT_GAP + maxTextWidth;
   const startX = (PAGE_WIDTH - totalWidth) / 2;
 
   if (fs.existsSync(logoPath)) {
@@ -155,10 +205,10 @@ function renderHeader(
     });
   }
 
-  y += SECTION_LINE_HEIGHT * 0.25; // Slightly lower the text relative to logo
+  y += LOGO_TEXT_VERTICAL_OFFSET;
 
   // From Address (to the right of logo)
-  const fromX = startX + LOGO_WIDTH + spacing;
+  const fromX = startX + LOGO_WIDTH + LOGO_TEXT_GAP;
   doc.font('Inter-Bold').text(BUSINESS_INFO.name, fromX, y);
   y += SECTION_LINE_HEIGHT;
 
@@ -223,7 +273,7 @@ function renderHeader(
 
   // Column positions
   const labelColumnEnd = midPoint + maxLabelWidth;
-  const valueColumnStart = labelColumnEnd + 4; // Small gap between columns
+  const valueColumnStart = labelColumnEnd + LABEL_VALUE_GAP;
 
   // Order ID with right-aligned label and left-aligned value
   doc.font('Inter-Bold').text('Order ID:', midPoint, orderDetailsY, {
@@ -232,7 +282,11 @@ function renderHeader(
   });
   doc
     .font('Inter')
-    .text(order.orderNumber || order.objectId || 'N/A', valueColumnStart, orderDetailsY);
+    .text(
+      order.orderNumber || order.objectId || 'N/A',
+      valueColumnStart,
+      orderDetailsY,
+    );
   orderDetailsY += LINE_HEIGHT;
 
   // Order Date with right-aligned label and left-aligned value
@@ -285,62 +339,22 @@ function renderItemsTable(
 
   // Table column positions
   const itemsColumnX = MARGIN;
-  const qtyColumnX = PAGE_WIDTH - MARGIN - 30; // Reserve space for qty
-  const itemsColumnWidth = qtyColumnX - itemsColumnX - 10; // Gap between columns
+  const qtyColumnX = PAGE_WIDTH - MARGIN - TABLE_QTY_COLUMN_WIDTH;
+  const itemsColumnWidth = qtyColumnX - itemsColumnX - TABLE_COLUMN_GAP;
 
-  // Table headers
-  doc
-    .font('Inter-Bold')
-    .text('ITEMS', itemsColumnX, y)
-    .text('QTY', qtyColumnX, y, {
-      align: 'right',
-      width: 30,
-    });
-  y += LINE_HEIGHT;
-
-  // Draw a thick line under headers (full width)
-  doc.lineWidth(2).moveTo(0, y).lineTo(PAGE_WIDTH, y).stroke();
-
-  // Helper function to render table headers
-  const renderTableHeaders = (startY: number): number => {
-    let headerY = startY;
-    doc
-      .font('Inter-Bold')
-      .text('ITEMS', itemsColumnX, headerY)
-      .text('QTY', qtyColumnX, headerY, {
-        align: 'right',
-        width: 30,
-      });
-    headerY += LINE_HEIGHT;
-
-    // Draw a thick line under headers (full width)
-    doc.lineWidth(2).moveTo(0, headerY).lineTo(PAGE_WIDTH, headerY).stroke();
-
-    // Reset to regular font for line items
-    doc.font('Inter');
-
-    return headerY;
-  };
+  // Render initial table headers
+  y = renderTableHeaders(doc, itemsColumnX, qtyColumnX, y);
 
   // Render each line item
   doc.font('Inter');
-  const rowPadding = 6; // Equal padding top and bottom
 
   for (let i = 0; i < lineItems.length; i++) {
     const item = lineItems[i];
 
     // Measure the space needed for this item before checking page break
     const title = item.title || 'Unknown Item';
-    // Use single line height for truncated text
     const singleLineHeight = doc.currentLineHeight();
-
-    let itemHeight = rowPadding + singleLineHeight; // Top padding + title
-
-    if (item.variantTitle) {
-      itemHeight += singleLineHeight; // Variant (no gap - goes right after title)
-    }
-
-    itemHeight += rowPadding; // Bottom padding
+    const itemHeight = calculateItemHeight(item, singleLineHeight);
 
     // Check if we need a new page based on actual item height
     const wouldFit = y + itemHeight <= PAGE_HEIGHT - MARGIN;
@@ -352,11 +366,11 @@ function renderItemsTable(
       });
       y = MARGIN + SECTION_SPACING; // Add section spacing at top of new page
       // Render headers on new page
-      y = renderTableHeaders(y);
+      y = renderTableHeaders(doc, itemsColumnX, qtyColumnX, y);
     }
 
     // Add padding at top of row
-    y += rowPadding;
+    y += TABLE_ROW_PADDING;
 
     const startY = y;
 
@@ -370,7 +384,7 @@ function renderItemsTable(
     const quantity = item.quantity || 0;
     doc.text(quantity.toString(), qtyColumnX, startY, {
       align: 'right',
-      width: 30,
+      width: TABLE_QTY_COLUMN_WIDTH,
     });
 
     y = startY + singleLineHeight;
@@ -388,7 +402,7 @@ function renderItemsTable(
     }
 
     // Add padding at bottom of row
-    y += rowPadding;
+    y += TABLE_ROW_PADDING;
 
     // Draw a thin line between items (except after the last item or if next item will be on new page)
     const isLastItem = i === lineItems.length - 1;
@@ -397,25 +411,55 @@ function renderItemsTable(
     if (!isLastItem) {
       // Check if next item will fit on this page
       const nextItem = lineItems[i + 1];
-      let nextItemHeight = rowPadding + singleLineHeight;
-
-      if (nextItem.variantTitle) {
-        nextItemHeight += singleLineHeight;
-      }
-
-      nextItemHeight += rowPadding;
-
+      const nextItemHeight = calculateItemHeight(nextItem, singleLineHeight);
       willNeedNewPage = y + nextItemHeight > PAGE_HEIGHT - MARGIN;
     }
 
     if (!isLastItem && !willNeedNewPage) {
       doc
-        .lineWidth(0.5)
+        .lineWidth(TABLE_SEPARATOR_LINE_WIDTH)
         .moveTo(MARGIN, y)
         .lineTo(PAGE_WIDTH - MARGIN, y)
         .stroke();
     }
   }
+
+  return y;
+}
+
+/**
+ * Render table headers for the items table
+ * @param doc - PDFKit document instance
+ * @param itemsColumnX - X position for items column
+ * @param qtyColumnX - X position for quantity column
+ * @param startY - Y position to start rendering
+ * @returns New Y position after rendering headers
+ */
+function renderTableHeaders(
+  doc: PDFKit.PDFDocument,
+  itemsColumnX: number,
+  qtyColumnX: number,
+  startY: number,
+): number {
+  let y = startY;
+  doc
+    .font('Inter-Bold')
+    .text('ITEMS', itemsColumnX, y)
+    .text('QTY', qtyColumnX, y, {
+      align: 'right',
+      width: TABLE_QTY_COLUMN_WIDTH,
+    });
+  y += LINE_HEIGHT;
+
+  // Draw a thick line under headers (full width)
+  doc
+    .lineWidth(TABLE_HEADER_LINE_WIDTH)
+    .moveTo(0, y)
+    .lineTo(PAGE_WIDTH, y)
+    .stroke();
+
+  // Reset to regular font for line items
+  doc.font('Inter');
 
   return y;
 }
