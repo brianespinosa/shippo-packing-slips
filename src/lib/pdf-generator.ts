@@ -15,10 +15,11 @@ const PAGE_HEIGHT = 6 * 72; // 432 points
 /**
  * Layout margins and spacing
  */
-const MARGIN = 20;
-const LOGO_WIDTH = 60;
-const LOGO_HEIGHT = 60;
+const MARGIN = 10;
+const LOGO_WIDTH = 36;
+const LOGO_HEIGHT = 36;
 const LINE_HEIGHT = 14;
+const SECTION_LINE_HEIGHT = LINE_HEIGHT * 0.8;
 const SECTION_SPACING = 16;
 
 /**
@@ -26,11 +27,11 @@ const SECTION_SPACING = 16;
  * TODO: Move to configuration file
  */
 const BUSINESS_INFO = {
-  city: 'Your City',
-  name: 'Your Business Name',
-  state: 'ST',
-  street: '123 Your Street',
-  zip: '12345',
+  city: 'Tacoma',
+  name: 'Bork Tools',
+  state: 'WA',
+  street: '514 S Cushman Ave',
+  zip: '98405',
 };
 
 /**
@@ -53,6 +54,9 @@ export async function generatePackingSlip(
       // Pipe to output file
       const stream = fs.createWriteStream(outputPath);
       doc.pipe(stream);
+
+      // Set default font size for entire document
+      doc.fontSize(8);
 
       // Track vertical position
       let y = MARGIN;
@@ -98,7 +102,6 @@ function renderHeader(
 ): number {
   // Title
   doc
-    .fontSize(16)
     .font('Helvetica-Bold')
     .text(
       `Packing Slip for Order ${order.orderNumber || order.objectId || 'N/A'}`,
@@ -109,60 +112,75 @@ function renderHeader(
         width: PAGE_WIDTH - 2 * MARGIN,
       },
     );
-  y += LINE_HEIGHT * 2 + SECTION_SPACING;
+  y += LINE_HEIGHT + SECTION_SPACING;
 
-  // Logo and From Address section
-  const logoPath = path.join(__dirname, '../assets/bork_logo_bw.png');
+  // Logo and From Address section - centered horizontally
+  const logoPath = path.join(process.cwd(), 'src/assets/bork_logo_bw.png');
+  const spacing = SECTION_SPACING / 2;
+
+  // Measure actual text widths to calculate proper centering
+  doc.font('Helvetica-Bold');
+  const nameWidth = doc.widthOfString(BUSINESS_INFO.name);
+
+  doc.font('Helvetica');
+  const streetWidth = doc.widthOfString(BUSINESS_INFO.street);
+  const cityStateZip = `${BUSINESS_INFO.city}, ${BUSINESS_INFO.state} ${BUSINESS_INFO.zip}`;
+  const cityWidth = doc.widthOfString(cityStateZip);
+
+  // Find the widest text line
+  const maxTextWidth = Math.max(nameWidth, streetWidth, cityWidth);
+
+  // Calculate total width and center it
+  const totalWidth = LOGO_WIDTH + spacing + maxTextWidth;
+  const startX = (PAGE_WIDTH - totalWidth) / 2;
 
   if (fs.existsSync(logoPath)) {
-    // Place logo on the left
-    doc.image(logoPath, MARGIN, y, {
+    // Place logo centered
+    doc.image(logoPath, startX, y, {
       height: LOGO_HEIGHT,
       width: LOGO_WIDTH,
     });
   }
 
+  y += SECTION_LINE_HEIGHT * 0.25; // Slightly lower the text relative to logo
+
   // From Address (to the right of logo)
-  const fromX = MARGIN + LOGO_WIDTH + 15;
-  doc.fontSize(9).font('Helvetica-Bold').text('From:', fromX, y);
-  y += LINE_HEIGHT;
+  const fromX = startX + LOGO_WIDTH + spacing;
+  doc.font('Helvetica-Bold').text(BUSINESS_INFO.name, fromX, y);
+  y += SECTION_LINE_HEIGHT;
 
   doc
-    .fontSize(8)
     .font('Helvetica')
-    .text(BUSINESS_INFO.name, fromX, y)
-    .text(BUSINESS_INFO.street, fromX, (y += LINE_HEIGHT))
-    .text(
-      `${BUSINESS_INFO.city}, ${BUSINESS_INFO.state} ${BUSINESS_INFO.zip}`,
-      fromX,
-      (y += LINE_HEIGHT),
-    );
+    .text(BUSINESS_INFO.street, fromX, y)
+    .text(cityStateZip, fromX, (y += SECTION_LINE_HEIGHT));
 
   // Move past the logo section
   y = Math.max(y + LINE_HEIGHT, MARGIN + LOGO_HEIGHT + SECTION_SPACING);
+  y += SECTION_SPACING; // Add vertical space before Ship To section
 
-  // Ship To Address
-  doc.fontSize(9).font('Helvetica-Bold').text('Ship To:', MARGIN, y);
+  // Ship To Address and Order Details on the same row
+  const startY = y;
+  const midPoint = PAGE_WIDTH / 2;
+
+  // Ship To Address (left side)
+  doc.font('Helvetica-Bold').text('Ship To:', MARGIN, y);
   y += LINE_HEIGHT;
 
   const address = order.toAddress;
-  doc
-    .fontSize(8)
-    .font('Helvetica')
-    .text(address.name || 'N/A', MARGIN, y);
-  y += LINE_HEIGHT;
+  doc.font('Helvetica').text(address.name || 'N/A', MARGIN, y);
+  y += SECTION_LINE_HEIGHT;
 
   if (address.company) {
     doc.text(address.company, MARGIN, y);
-    y += LINE_HEIGHT;
+    y += SECTION_LINE_HEIGHT;
   }
 
   doc.text(address.street1 || '', MARGIN, y);
-  y += LINE_HEIGHT;
+  y += SECTION_LINE_HEIGHT;
 
   if (address.street2) {
     doc.text(address.street2, MARGIN, y);
-    y += LINE_HEIGHT;
+    y += SECTION_LINE_HEIGHT;
   }
 
   doc.text(
@@ -170,36 +188,62 @@ function renderHeader(
     MARGIN,
     y,
   );
-  y += LINE_HEIGHT;
+  y += SECTION_LINE_HEIGHT;
 
   doc.text(address.country || '', MARGIN, y);
-  y += LINE_HEIGHT + SECTION_SPACING;
+  const shipToEndY = y + LINE_HEIGHT;
 
-  // Order Details
-  doc.fontSize(9).font('Helvetica-Bold').text('Order Details:', MARGIN, y);
-  y += LINE_HEIGHT;
+  // Order Details (right side, starting at same y as Ship To)
+  // Two-column layout: labels right-aligned, values left-aligned
+  let orderDetailsY = startY;
 
-  doc.fontSize(8).font('Helvetica');
+  // Measure label widths to determine column positions
+  doc.font('Helvetica-Bold');
+  const orderIdLabelWidth = doc.widthOfString('Order ID:');
+  const orderDateLabelWidth = doc.widthOfString('Order Date:');
+  const totalItemsLabelWidth = doc.widthOfString('Total Items:');
+  const maxLabelWidth = Math.max(
+    orderIdLabelWidth,
+    orderDateLabelWidth,
+    totalItemsLabelWidth,
+  );
 
-  // Order ID
-  doc.text(`Order ID: ${order.objectId || 'N/A'}`, MARGIN, y, {
-    continued: false,
+  // Column positions
+  const labelColumnEnd = midPoint + maxLabelWidth;
+  const valueColumnStart = labelColumnEnd + 4; // Small gap between columns
+
+  // Order ID with right-aligned label and left-aligned value
+  doc.font('Helvetica-Bold').text('Order ID:', midPoint, orderDetailsY, {
+    align: 'right',
+    width: maxLabelWidth,
   });
-  y += LINE_HEIGHT;
+  doc
+    .font('Helvetica')
+    .text(order.objectId || 'N/A', valueColumnStart, orderDetailsY);
+  orderDetailsY += LINE_HEIGHT;
 
-  // Order Date
+  // Order Date with right-aligned label and left-aligned value
   if (order.placedAt) {
     const orderDate = new Date(order.placedAt);
-    const formattedDate = orderDate.toLocaleDateString('en-US', {
-      day: 'numeric',
-      month: 'long',
-      year: 'numeric',
+    const formattedDate = orderDate.toLocaleDateString('en-US');
+    doc.font('Helvetica-Bold').text('Order Date:', midPoint, orderDetailsY, {
+      align: 'right',
+      width: maxLabelWidth,
     });
-    doc.text(`Order Date: ${formattedDate}`, MARGIN, y);
-    y += LINE_HEIGHT;
+    doc.font('Helvetica').text(formattedDate, valueColumnStart, orderDetailsY);
+    orderDetailsY += LINE_HEIGHT;
   }
 
-  y += SECTION_SPACING;
+  // Total Items with right-aligned label and left-aligned placeholder
+  doc.font('Helvetica-Bold').text('Total Items:', midPoint, orderDetailsY, {
+    align: 'right',
+    width: maxLabelWidth,
+  });
+  doc.font('Helvetica').text('X', valueColumnStart, orderDetailsY);
+  orderDetailsY += LINE_HEIGHT;
+
+  // Move y past whichever section is taller
+  y = Math.max(shipToEndY, orderDetailsY) + SECTION_SPACING;
 
   return y;
 }
