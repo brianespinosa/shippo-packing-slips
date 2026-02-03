@@ -31,3 +31,4 @@ build/
 # Generated PDFs
 test-packing-slip.pdf
 packing-slip-*.pdf
+output/

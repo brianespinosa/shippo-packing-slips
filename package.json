@@ -21,6 +21,7 @@
     "dev": "tsc --watch",
     "format": "prettier --write .",
     "format:check": "prettier --check .",
+    "generate": "yarn build && node dist/generate-real-pdfs.js",
     "lint": "eslint . --ext .ts,.tsx",
     "lint:fix": "eslint . --ext .ts,.tsx --fix",
     "sort-package": "yarn dlx sort-package-json",

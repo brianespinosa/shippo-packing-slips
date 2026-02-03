@@ -232,7 +232,7 @@ function renderHeader(
   });
   doc
     .font('Inter')
-    .text(order.objectId || 'N/A', valueColumnStart, orderDetailsY);
+    .text(order.orderNumber || order.objectId || 'N/A', valueColumnStart, orderDetailsY);
   orderDetailsY += LINE_HEIGHT;
 
   // Order Date with right-aligned label and left-aligned value
@@ -248,7 +248,8 @@ function renderHeader(
   }
 
   // Total Items with right-aligned label and left-aligned value
-  const totalItems = order.lineItems?.length || 0;
+  const totalItems =
+    order.lineItems?.reduce((sum, item) => sum + (item.quantity || 0), 0) || 0;
   doc.font('Inter-Bold').text('Total Items:', midPoint, orderDetailsY, {
     align: 'right',
     width: maxLabelWidth,
@@ -376,11 +377,12 @@ function renderItemsTable(
 
     // Variant title (if present)
     if (item.variantTitle) {
-      doc.text(item.variantTitle, itemsColumnX, y, {
+      doc.font('Inter-Bold').text(item.variantTitle, itemsColumnX, y, {
         ellipsis: true,
         height: singleLineHeight,
         width: itemsColumnWidth,
       });
+      doc.font('Inter'); // Reset to regular font
 
       y += singleLineHeight;
     }
