@@ -43,7 +43,9 @@ async function generateRealPDFs() {
 
     if (orders.length === 0) {
       console.log('No orders found in the specified date range.');
-      console.log('Try adjusting the time window or check your Shippo account.');
+      console.log(
+        'Try adjusting the time window or check your Shippo account.',
+      );
       process.exit(0);
     }
 
@@ -77,7 +79,7 @@ async function generateRealPDFs() {
         try {
           await execAsync(`open "${outputPath}"`);
           console.log(`  Opened PDF`);
-        } catch (openError) {
+        } catch {
           console.log(`  (Could not auto-open PDF)`);
         }
 
