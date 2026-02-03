@@ -330,19 +330,13 @@ function renderItemsTable(
 
     // Measure the space needed for this item before checking page break
     const title = item.title || 'Unknown Item';
-    const titleHeight = doc.heightOfString(title, {
-      ellipsis: true,
-      width: itemsColumnWidth,
-    });
+    // Use single line height for truncated text
+    const singleLineHeight = doc.currentLineHeight();
 
-    let itemHeight = rowPadding + titleHeight; // Top padding + title
+    let itemHeight = rowPadding + singleLineHeight; // Top padding + title
 
     if (item.variantTitle) {
-      const variantHeight = doc.heightOfString(item.variantTitle, {
-        ellipsis: true,
-        width: itemsColumnWidth,
-      });
-      itemHeight += variantHeight; // Variant (no gap - goes right after title)
+      itemHeight += singleLineHeight; // Variant (no gap - goes right after title)
     }
 
     itemHeight += rowPadding; // Bottom padding
@@ -367,7 +361,7 @@ function renderItemsTable(
 
     doc.text(title, itemsColumnX, y, {
       ellipsis: true,
-      lineBreak: false,
+      height: singleLineHeight,
       width: itemsColumnWidth,
     });
 
@@ -378,22 +372,17 @@ function renderItemsTable(
       width: 30,
     });
 
-    y = startY + titleHeight;
+    y = startY + singleLineHeight;
 
     // Variant title (if present)
     if (item.variantTitle) {
-      const variantHeight = doc.heightOfString(item.variantTitle, {
-        ellipsis: true,
-        width: itemsColumnWidth,
-      });
-
       doc.text(item.variantTitle, itemsColumnX, y, {
         ellipsis: true,
-        lineBreak: false,
+        height: singleLineHeight,
         width: itemsColumnWidth,
       });
 
-      y += variantHeight;
+      y += singleLineHeight;
     }
 
     // Add padding at bottom of row
@@ -406,20 +395,10 @@ function renderItemsTable(
     if (!isLastItem) {
       // Check if next item will fit on this page
       const nextItem = lineItems[i + 1];
-      const nextTitle = nextItem.title || 'Unknown Item';
-      const nextTitleHeight = doc.heightOfString(nextTitle, {
-        ellipsis: true,
-        width: itemsColumnWidth,
-      });
-
-      let nextItemHeight = rowPadding + nextTitleHeight;
+      let nextItemHeight = rowPadding + singleLineHeight;
 
       if (nextItem.variantTitle) {
-        const nextVariantHeight = doc.heightOfString(nextItem.variantTitle, {
-          ellipsis: true,
-          width: itemsColumnWidth,
-        });
-        nextItemHeight += nextVariantHeight;
+        nextItemHeight += singleLineHeight;
       }
 
       nextItemHeight += rowPadding;
