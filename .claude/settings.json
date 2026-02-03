@@ -1,0 +1,16 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(gh pr checks:*)",
+      "Bash(gh pr diff:*)",
+      "Bash(gh pr view:*)",
+      "Bash(gh run list:*)",
+      "Bash(gh run view:*)",
+      "Bash(git check-ignore:*)",
+      "Bash(git fetch:*)",
+      "WebFetch(domain:docs.goshippo.com)",
+      "WebFetch(domain:goshippo.com)",
+      "WebSearch"
+    ]
+  }
+}
