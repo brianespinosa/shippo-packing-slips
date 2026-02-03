@@ -12,16 +12,19 @@ See `README.md` for repository overview and contents.
 - **Web URL**: https://docs.goshippo.com/spec/shippoapi/public-api.yaml (same content, but slow to fetch)
 
 **Why local?**
+
 - The spec file is large (904KB) and truncates when fetched via web tools
 - Local file access is faster and more reliable
 - Contains complete endpoint documentation including `/orders` endpoint at line 9102
 
 **Key endpoints for this project**:
+
 - `GET /orders` - List orders with date filtering (see reference/shippo-api.yaml:9102-9251)
   - Query params: `start_date`, `end_date`, `order_status[]`, `shop_app`, `page`
   - Date format: ISO 8601 UTC (e.g., `2026-02-02T14:00:00`)
 
 **Reference materials**:
+
 - `reference/example-shippo-packing-slip.pdf` - Example of Shippo's default packing slip format
 
 See `ARCHITECTURE.md` for detailed integration strategy.
@@ -36,6 +39,7 @@ This repository **REQUIRES** distributed CLAUDE.md files throughout the director
 - `.github/CLAUDE.md` - GitHub Actions workflow documentation
 
 **When adding new features or directories:**
+
 - Create separate CLAUDE.md files in relevant subdirectories
 - Do NOT expand this root CLAUDE.md file with detailed information
 - Keep this root file focused on high-level repository overview only
@@ -44,6 +48,7 @@ This repository **REQUIRES** distributed CLAUDE.md files throughout the director
 **README.md vs CLAUDE.md distinction:**
 
 When a directory has a README.md, the CLAUDE.md should reference it. When a directory has both files:
+
 - **README.md** - User-facing documentation (what the component does, detailed explanations, setup instructions, architecture overview)
 - **CLAUDE.md** - Claude-specific development guidance (critical warnings, gotchas, common tasks with file:line references, testing patterns)
 - **Pattern**: CLAUDE.md should reference README.md for overview/details and focus only on what Claude needs to work safely and effectively
@@ -77,12 +82,14 @@ All commit messages MUST follow [Conventional Commits](https://www.conventionalc
 Common types: `feat`, `fix`, `docs`, `refactor`, `test`, `chore`, `ci`
 
 **Commit message requirements:**
+
 - Keep messages brief and easy to parse - avoid lengthy descriptions
 - Focus on specific, scannable details that help humans quickly identify what a commit contains
 - **NEVER** add "🤖 Generated with Claude Code" or similar footers to commit messages
 - **NEVER** add "Co-Authored-By: Claude" or any co-author footers to commits
 
 **Pull request requirements:**
+
 - **NEVER** add "Co-Authored-By: Claude" or any co-author attribution to PR descriptions
 - **NEVER** add "🤖 Generated with Claude Code" or similar attribution to PRs
 - Keep PR descriptions focused on technical changes, testing, and references
@@ -98,6 +105,7 @@ Common types: `feat`, `fix`, `docs`, `refactor`, `test`, `chore`, `ci`
 - If files don't appear in `git status`, they are outside the repository boundary
 
 **Verification workflow:**
+
 1. Run `git rev-parse --show-toplevel` to identify repository root
 2. Create files/directories relative to that root
 3. Run `git status` to confirm files are detected by git
@@ -107,6 +115,7 @@ Common types: `feat`, `fix`, `docs`, `refactor`, `test`, `chore`, `ci`
 Always fully evaluate the technical merits of questions and suggestions against relevant sources of truth and documentation.
 
 **Do NOT** use validating phrases like "you're absolutely right" or similar affirmations. Instead:
+
 - Verify claims against actual code, configuration files, and documentation
 - Challenge suggestions when they conflict with established patterns or best practices
 - Provide objective, evidence-based responses

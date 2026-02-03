@@ -7,6 +7,7 @@ No active workflows are currently configured.
 ### Disabled Workflows
 
 **auto-merge.disabled** (in `.github/workflows/`)
+
 - Originally enabled auto-merge on all PRs with squash strategy
 - Disabled by changing extension from `.yml` to `.disabled`
 - Can be re-enabled by renaming back to `auto-merge.yml`
@@ -20,6 +21,7 @@ No active workflows are currently configured.
 **Step property ordering**: Always list job step properties in the same consistent order for readability and maintainability.
 
 **Required order:**
+
 1. `name` - Step name (always first)
 2. `id` - Step identifier (if present)
 3. `uses` - Action to use (if present, mutually exclusive with `run`)
@@ -28,6 +30,7 @@ No active workflows are currently configured.
 6. `run` - Shell commands (always last, mutually exclusive with `uses`)
 
 **Example:**
+
 ```yaml
 - name: Fetch data
   id: fetch
