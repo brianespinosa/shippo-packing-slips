@@ -2,31 +2,18 @@
 
 ## Workflows
 
-### auto-merge.yml
+No active workflows are currently configured.
 
-Automatically enables auto-merge on all pull requests using the squash merge strategy.
+### Disabled Workflows
 
-**How it works:**
-- Triggers when a PR is opened, synchronized, or reopened
-- Uses the GitHub CLI to enable auto-merge with squash strategy
-- Relies on branch protection rules to ensure required checks pass before merging
-- Uses standard `GITHUB_TOKEN` - no additional secrets required
-
-**Permissions:**
-- `pull-requests: write` - To enable auto-merge on PRs
-- `contents: write` - To merge PRs
-
-**Merge Strategy:**
-All PRs use squash merge to maintain a clean commit history.
-
-**Safety:**
-The `--auto` flag means PRs will only merge after all branch protection requirements are satisfied (required checks, reviews, etc.).
+**auto-merge.disabled** (in `.github/workflows/`)
+- Originally enabled auto-merge on all PRs with squash strategy
+- Disabled by changing extension from `.yml` to `.disabled`
+- Can be re-enabled by renaming back to `auto-merge.yml`
 
 ## Common Tasks
 
-**Editing workflows**: When modifying workflow files, always use environment variables for GitHub context values to prevent command injection vulnerabilities. See workflows/auto-merge.yml:19-22 for example.
-
-**Debug failures**: Check Actions tab logs for workflow execution details
+**Debug failures**: Check Actions tab logs for workflow execution details when workflows are added
 
 ## Workflow Formatting Conventions
 
