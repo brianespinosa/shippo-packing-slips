@@ -3,6 +3,7 @@
     "allow": [
       "Bash(gh issue create:*)",
       "Bash(gh issue list:*)",
+      "Bash(gh issue view:*)",
       "Bash(gh pr checks:*)",
       "Bash(gh pr diff:*)",
       "Bash(gh pr view:*)",
@@ -10,9 +11,17 @@
       "Bash(gh run view:*)",
       "Bash(git check-ignore:*)",
       "Bash(git fetch:*)",
+      "Bash(node:*)",
+      "Bash(yarn node:*)",
+      "Bash(yarn test:api:*)",
       "WebFetch(domain:docs.goshippo.com)",
       "WebFetch(domain:goshippo.com)",
       "WebSearch"
+    ],
+    "deny": [
+      "Edit(file:.env*)",
+      "Read(file:.env*)",
+      "Write(file:.env*)"
     ]
   }
 }
