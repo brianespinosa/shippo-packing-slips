@@ -25,6 +25,7 @@
     "lint:fix": "eslint . --ext .ts,.tsx --fix",
     "sort-package": "yarn dlx sort-package-json",
     "test:api": "yarn build && node dist/test-shippo.js",
+    "test:pdf": "yarn build && node dist/test-pdf.js",
     "typecheck": "tsc --noEmit"
   },
   "prettier": "@bjeco/prettier-config",
