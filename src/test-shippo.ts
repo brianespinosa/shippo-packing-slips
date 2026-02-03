@@ -1,4 +1,5 @@
 import dotenv from 'dotenv';
+
 import { fetchOrders } from './lib/shippo';
 
 // Load environment variables
@@ -79,4 +80,4 @@ async function testShippoAPI() {
 }
 
 // Run the test
-testShippoAPI();
+void testShippoAPI();

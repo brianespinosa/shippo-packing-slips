@@ -18,10 +18,6 @@
       "WebFetch(domain:goshippo.com)",
       "WebSearch"
     ],
-    "deny": [
-      "Edit(file:.env*)",
-      "Read(file:.env*)",
-      "Write(file:.env*)"
-    ]
+    "deny": ["Edit(file:.env*)", "Read(file:.env*)", "Write(file:.env*)"]
   }
 }

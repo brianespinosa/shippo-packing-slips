@@ -957,7 +957,7 @@ paths:
                       "servicelevel_token": "fedex_2_day"
                     }
                   ]
-                }' 
+                }'
         - lang: python
           label: Python
           source: |-
@@ -17544,7 +17544,7 @@ components:
           type: string
           description: |-
             Addresses containing a phone number allow carriers to call the recipient when delivering the Parcel. This 
-            increases the probability of delivery and helps to avoid accessorial charges after a Parcel has been shipped.    
+            increases the probability of delivery and helps to avoid accessorial charges after a Parcel has been shipped.
         email:
           example: shippotle@shippo.com
           type: string
@@ -17732,7 +17732,7 @@ components:
           type: string
           description: |-
             Addresses containing a phone number allow carriers to call the recipient when delivering the Parcel. This 
-            increases the probability of delivery and helps to avoid accessorial charges after a Parcel has been shipped.    
+            increases the probability of delivery and helps to avoid accessorial charges after a Parcel has been shipped.
         email:
           example: shippotle@shippo.com
           type: string
@@ -21166,7 +21166,7 @@ components:
                         - oauth
                     status:
                       type: string
-                      description: 'Current authentication status. Possible values: ''disconnected'' (authorization lost, reconnect needed), ''connected'' (authorized and active), ''authorization_pending'' (awaiting initial authorization flow).'
+                      description: "Current authentication status. Possible values: 'disconnected' (authorization lost, reconnect needed), 'connected' (authorized and active), 'authorization_pending' (awaiting initial authorization flow)."
                       enum:
                         - disconnected
                         - connected
@@ -22679,7 +22679,7 @@ components:
         | royal_mail_sf_tracked_24_for_post_office_drop_with_signature_confirmation | Royal Mail Tracked 24 for Post Office Drop with Signature |
         | royal_mail_sf_international_tracked_for_post_office_drop | Royal Mail International Tracked for Post Office Drop |
         | royal_mail_sf_international_tracked_with_signature_confirmation | Royal Mail International Tracked with Signature |
-        | royal_mail_sf_international_tracked_for_post_office_drop_with_signature_confirmation | Royal Mail International Tracked for Post Office Drop with Signature |  
+        | royal_mail_sf_international_tracked_for_post_office_drop_with_signature_confirmation | Royal Mail International Tracked for Post Office Drop with Signature |
     ServiceLevelOnTracEnum:
       type: string
       enum:
