@@ -401,7 +401,31 @@ function renderItemsTable(
 
     // Draw a thin line between items (except after the last item or if next item will be on new page)
     const isLastItem = i === lineItems.length - 1;
-    const willNeedNewPage = y > PAGE_HEIGHT - MARGIN - LINE_HEIGHT * 3;
+    let willNeedNewPage = false;
+
+    if (!isLastItem) {
+      // Check if next item will fit on this page
+      const nextItem = lineItems[i + 1];
+      const nextTitle = nextItem.title || 'Unknown Item';
+      const nextTitleHeight = doc.heightOfString(nextTitle, {
+        ellipsis: true,
+        width: itemsColumnWidth,
+      });
+
+      let nextItemHeight = rowPadding + nextTitleHeight;
+
+      if (nextItem.variantTitle) {
+        const nextVariantHeight = doc.heightOfString(nextItem.variantTitle, {
+          ellipsis: true,
+          width: itemsColumnWidth,
+        });
+        nextItemHeight += nextVariantHeight;
+      }
+
+      nextItemHeight += rowPadding;
+
+      willNeedNewPage = y + nextItemHeight > PAGE_HEIGHT - MARGIN;
+    }
 
     if (!isLastItem && !willNeedNewPage) {
       doc
