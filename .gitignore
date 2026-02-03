@@ -27,3 +27,7 @@ yarn-error.log*
 # Build outputs
 dist/
 build/
+
+# Generated PDFs
+test-packing-slip.pdf
+packing-slip-*.pdf
