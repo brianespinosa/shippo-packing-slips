@@ -17,7 +17,10 @@ async function runPackingSlipsJob(
 ): Promise<{ success: number; errors: number }> {
   console.log('Fetching orders and generating packing slips...');
 
-  const statusFilter = [OrderStatusEnum.Paid];
+  const statusFilter =
+    process.env.INCLUDE_ALL_ORDER_STATUSES === 'true'
+      ? undefined
+      : [OrderStatusEnum.Paid];
 
   try {
     const orders = await fetchOrders(startDate, endDate, statusFilter);
@@ -187,6 +190,11 @@ async function run() {
   if (!apiToken) {
     console.error('Error: SHIPPO_API_TOKEN not found in environment');
     console.error('Please add your production API token');
+    process.exit(2);
+  }
+
+  if (!process.env.COMPANY_NAME) {
+    console.error('Error: COMPANY_NAME not found in environment');
     process.exit(2);
   }
 
