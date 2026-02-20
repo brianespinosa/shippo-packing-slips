@@ -1,5 +1,10 @@
 import { Shippo } from 'shippo';
-import type { Order, OrderStatusEnum } from 'shippo/models/components';
+import type {
+  Order,
+  OrderStatusEnum,
+  Transaction,
+} from 'shippo/models/components';
+import { TransactionStatusEnum } from 'shippo/models/components';
 
 /**
  * Initialize Shippo client with API token from environment
@@ -70,5 +75,72 @@ export async function fetchOrders(
       throw new Error(`Failed to fetch orders from Shippo: ${error.message}`);
     }
     throw new Error('Failed to fetch orders from Shippo: Unknown error');
+  }
+}
+
+/**
+ * Fetch successful transactions from Shippo within a specified date range.
+ * The API does not support server-side date filtering, so we paginate newest-first
+ * and stop once results fall before startDate.
+ * @param startDate - Start of date range (inclusive)
+ * @param endDate - End of date range (inclusive)
+ * @returns Array of Transaction objects within the date range that have a truthy labelUrl
+ */
+export async function fetchTransactions(
+  startDate: Date,
+  endDate: Date,
+): Promise<Transaction[]> {
+  const client = createShippoClient();
+
+  try {
+    const matched: Transaction[] = [];
+    let page = 1;
+    let hasMore = true;
+
+    while (hasMore) {
+      const response = await client.transactions.list({
+        objectStatus: TransactionStatusEnum.Success,
+        page,
+        results: 25,
+      });
+
+      const pageResults = response.results ?? [];
+
+      for (const tx of pageResults) {
+        const created = tx.objectCreated;
+
+        // Results are newest-first; stop paging once we're before the window
+        if (created && created < startDate) {
+          console.log(
+            `  Stopping pagination: reached transaction before window (${created.toISOString()})`,
+          );
+          hasMore = false;
+          break;
+        }
+
+        if (
+          created &&
+          created >= startDate &&
+          created <= endDate &&
+          tx.labelUrl
+        ) {
+          matched.push(tx);
+        }
+      }
+
+      if (hasMore) {
+        hasMore = !!response.next;
+        page++;
+      }
+    }
+
+    return matched;
+  } catch (error) {
+    if (error instanceof Error) {
+      throw new Error(
+        `Failed to fetch transactions from Shippo: ${error.message}`,
+      );
+    }
+    throw new Error('Failed to fetch transactions from Shippo: Unknown error');
   }
 }
