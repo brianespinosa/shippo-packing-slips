@@ -17,6 +17,7 @@
   "main": "dist/index.js",
   "scripts": {
     "build": "tsc",
+    "build:bundle": "ncc build src/index.ts -o dist/bundle --minify",
     "check": "biome check --write ./",
     "clean": "rm -rf dist",
     "dev": "tsc --watch",
@@ -36,6 +37,7 @@
     "@biomejs/biome": "2.4.3",
     "@types/node": "25.2.0",
     "@types/pdfkit": "0.17.4",
+    "@vercel/ncc": "0.38.4",
     "lefthook": "2.1.1",
     "typescript": "5.9.3"
   },
