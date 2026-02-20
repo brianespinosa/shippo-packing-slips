@@ -14,7 +14,7 @@ async function runPackingSlipsJob(
   startDate: Date,
   endDate: Date,
 ): Promise<{ success: number; errors: number }> {
-  console.log('Fetching packing slips...');
+  console.log('Fetching orders and generating packing slips...');
 
   const statusFilter = [OrderStatusEnum.Paid];
 
