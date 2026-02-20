@@ -1,8 +1,24 @@
 # shippo-packing-slips
 
+> **Work in progress.** This project is under active development and not yet fully functional. Core features are still being implemented — see the roadmap below.
+
 Automated packing slip and shipping label printer for Shippo orders. Runs on a Raspberry Pi Zero 2 W on a cron schedule, fetches recent activity from the Shippo API, and prints to a Knaon thermal printer via CUPS.
 
 See `ARCHITECTURE.md` for full system design.
+
+## Roadmap
+
+Features are being implemented in this order:
+
+1. **[#30] Refactor into single entry point** — consolidate `src/index.ts`, write PDFs to `/tmp`, clean up after printing
+2. **[#31] Shipping label printing** — fetch Shippo labels for the time window, download, print, and clean up
+3. **[#5] CUPS printer integration** — send PDFs to the Knaon via `lp`
+4. **[#6] Error handling and logging** — consistent exit codes and cron-friendly output
+5. **[#8] Cron setup on Pi** — configure the scheduled job on the Raspberry Pi
+6. **[#33] Add `.env.example`** — template for local and Pi setup
+7. **[#32] Make repository public** — prerequisite for the CD pipeline
+8. **[#26] CD pipeline** — bundle with `ncc`, publish to GitHub Releases on merge to `main`
+9. **[#9] Deployment guide** — reproduce the full Pi provisioning from scratch
 
 ## Requirements
 
