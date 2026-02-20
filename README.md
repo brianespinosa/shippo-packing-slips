@@ -61,4 +61,4 @@ The script is deployed to a Raspberry Pi Zero 2 W. On every merge to `main`, Git
 curl -fsSL https://github.com/brianespinosa/shippo-packing-slips/releases/latest/download/bundle.js | node -
 ```
 
-See issue #26 for CD pipeline implementation status.
+See [issue #26](https://github.com/brianespinosa/shippo-packing-slips/issues/26) for CD pipeline implementation status.
