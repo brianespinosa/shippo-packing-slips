@@ -36,6 +36,12 @@ yarn generate                      # fetch orders and generate PDFs
 | `SHIPPO_TEST_API_TOKEN` | Shippo test token (optional, for test scripts) |
 | `CRON_TIME_WINDOW_MINUTES` | Minutes to look back on each cron run (default: 60) |
 | `CUPS_PRINTER_NAME` | CUPS destination name for the printer (e.g. `Knaon`) |
+| `COMPANY_NAME` | Company name rendered in bold on packing slip header (required) |
+| `COMPANY_ADDRESS_LINE_1` | First address line (optional) |
+| `COMPANY_ADDRESS_LINE_2` | Second address line (optional) |
+| `COMPANY_ADDRESS_LINE_3` | Third address line (optional) |
+| `COMPANY_LOGO_PATH` | Absolute or relative path to logo image (optional) |
+| `INCLUDE_ALL_ORDER_STATUSES` | Set to `true` to fetch all order statuses instead of only `PAID` (optional) |
 
 Values in `.env.local` override `.env`.
 
@@ -53,7 +59,7 @@ Values in `.env.local` override `.env`.
 The script is deployed to a Raspberry Pi Zero 2 W. On every merge to `main`, GitHub Actions publishes a bundled release. The Pi cron job pulls and runs it directly:
 
 ```
-curl -fsSL https://github.com/brianespinosa/shippo-packing-slips/releases/latest/download/bundle.js | node -
+curl -fsSL https://github.com/brianespinosa/shippo-packing-slips/releases/latest/download/index.js | node -
 ```
 
 See [issue #26](https://github.com/brianespinosa/shippo-packing-slips/issues/26) for CD pipeline implementation status.
