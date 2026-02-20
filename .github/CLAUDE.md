@@ -6,6 +6,8 @@
 
 **biome.yml** — Runs `yarn biome ci ./` on PRs targeting `main`. Enforces linting and formatting via Biome.
 
+**release.yml** — Runs on push to `main`. Bundles `src/index.ts` and all dependencies into a single minified file using `@vercel/ncc` and publishes it as `index.js` to a continuously updated `latest` GitHub Release tag.
+
 **typecheck.yml** — Runs `yarn typecheck` (`tsc --noEmit`) on PRs targeting `main`. Enforces TypeScript type correctness.
 
 ### Disabled Workflows
