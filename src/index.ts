@@ -1,7 +1,8 @@
 import dotenv from 'dotenv';
 
-// Load environment variables
-dotenv.config({ path: '.env.local' });
+// Load environment variables (.env.local overrides .env)
+dotenv.config();
+dotenv.config({ override: true, path: '.env.local' });
 
 // Verify environment setup
 const apiToken = process.env.SHIPPO_API_TOKEN;
