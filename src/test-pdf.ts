@@ -1,6 +1,5 @@
+import path from 'node:path';
 import type { Order } from 'shippo/models/components';
-
-import path from 'path';
 
 import { generatePackingSlip } from './lib/pdf-generator';
 

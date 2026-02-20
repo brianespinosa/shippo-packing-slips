@@ -13,7 +13,7 @@ if (!apiToken) {
 }
 
 console.log('Environment configured successfully');
-console.log('API Token loaded:', apiToken.substring(0, 20) + '...');
+console.log('API Token loaded:', `${apiToken.substring(0, 20)}...`);
 
 // This will be the main entry point for the CLI
 // Currently just validates the setup

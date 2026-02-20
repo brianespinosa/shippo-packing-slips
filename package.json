@@ -17,34 +17,26 @@
   "main": "dist/index.js",
   "scripts": {
     "build": "tsc",
+    "check": "biome check --write ./",
     "clean": "rm -rf dist",
     "dev": "tsc --watch",
-    "format": "prettier --write .",
-    "format:check": "prettier --check .",
     "generate": "yarn build && node dist/generate-real-pdfs.js",
-    "lint": "eslint . --ext .ts,.tsx",
-    "lint:fix": "eslint . --ext .ts,.tsx --fix",
+    "postinstall": "lefthook install",
     "sort-package": "yarn dlx sort-package-json",
     "test:api": "yarn build && node dist/test-shippo.js",
     "test:pdf": "yarn build && node dist/test-pdf.js",
     "typecheck": "tsc --noEmit"
   },
-  "prettier": "@bjeco/prettier-config",
   "dependencies": {
     "dotenv": "17.2.3",
     "pdfkit": "0.17.2",
     "shippo": "2.17.4"
   },
   "devDependencies": {
-    "@bjeco/prettier-config": "*",
+    "@biomejs/biome": "2.4.3",
     "@types/node": "25.2.0",
     "@types/pdfkit": "0.17.4",
-    "@typescript-eslint/eslint-plugin": "8.54.0",
-    "@typescript-eslint/parser": "8.54.0",
-    "eslint": "9.39.2",
-    "eslint-config-prettier": "10.1.8",
-    "eslint-plugin-perfectionist": "5.4.0",
-    "prettier": "3.8.1",
+    "lefthook": "2.1.1",
     "typescript": "5.9.3"
   },
   "packageManager": "yarn@4.12.0"
