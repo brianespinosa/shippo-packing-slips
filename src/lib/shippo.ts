@@ -1,4 +1,4 @@
-import type { Order } from 'shippo/models/components';
+import type { Order, OrderStatusEnum } from 'shippo/models/components';
 
 import { Shippo } from 'shippo';
 
@@ -24,11 +24,13 @@ export function createShippoClient(): Shippo {
  * Fetch orders from Shippo within a specified date range
  * @param startDate - Start of date range (orders placed after this time)
  * @param endDate - End of date range (orders placed before this time)
+ * @param orderStatus - Optional array of order statuses to filter by (e.g., [OrderStatusEnum.Paid])
  * @returns Array of order objects from Shippo
  */
 export async function fetchOrders(
   startDate: Date,
   endDate: Date,
+  orderStatus?: OrderStatusEnum[],
 ): Promise<Order[]> {
   const client = createShippoClient();
 
@@ -45,6 +47,7 @@ export async function fetchOrders(
       // Fetch orders for current page
       const response = await client.orders.list({
         endDate: endDateISO,
+        orderStatus,
         page,
         results: 25, // Default page size
         startDate: startDateISO,
