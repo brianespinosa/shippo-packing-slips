@@ -48,18 +48,6 @@ const TABLE_COLUMN_GAP = 10; // Gap between items and quantity columns
 const TABLE_ROW_PADDING = 6; // Vertical padding top and bottom of each row
 
 /**
- * Business information for "From" address
- * TODO: Move to configuration file
- */
-const BUSINESS_INFO = {
-  city: 'REDACTED_CITY',
-  name: 'REDACTED_COMPANY',
-  state: 'WA',
-  street: 'REDACTED_STREET',
-  zip: 'REDACTED_ZIP',
-};
-
-/**
  * Generate a packing slip PDF for a given order
  * @param order - Order object from Shippo API
  * @param outputPath - Path where the PDF should be saved
@@ -178,44 +166,54 @@ function renderHeader(
   y += SECTION_SPACING / 2;
 
   // Logo and From Address section - centered horizontally
-  const logoPath = path.join(process.cwd(), 'src/assets/bork_logo_bw.png');
+  const companyName = process.env.COMPANY_NAME;
+  if (!companyName) {
+    throw new Error('COMPANY_NAME environment variable is required');
+  }
+  const addressLines = [
+    process.env.COMPANY_ADDRESS_LINE_1,
+    process.env.COMPANY_ADDRESS_LINE_2,
+    process.env.COMPANY_ADDRESS_LINE_3,
+  ].filter(Boolean) as string[];
+
+  const logoPath = process.env.COMPANY_LOGO_PATH;
+  const hasLogo = !!logoPath && fs.existsSync(logoPath);
 
   // Measure actual text widths to calculate proper centering
+  // Company name is bold; address lines are regular weight — measure each with its own font
   doc.font('Inter-Bold');
-  const nameWidth = doc.widthOfString(BUSINESS_INFO.name);
-
+  const nameWidth = doc.widthOfString(companyName);
   doc.font('Inter');
-  const streetWidth = doc.widthOfString(BUSINESS_INFO.street);
-  const cityStateZip = `${BUSINESS_INFO.city}, ${BUSINESS_INFO.state} ${BUSINESS_INFO.zip}`;
-  const cityWidth = doc.widthOfString(cityStateZip);
+  const addressWidths = addressLines.map((l) => doc.widthOfString(l));
+  const maxTextWidth = Math.max(nameWidth, ...addressWidths);
 
-  // Find the widest text line
-  const maxTextWidth = Math.max(nameWidth, streetWidth, cityWidth);
-
-  // Calculate total width and center it
-  const totalWidth = LOGO_WIDTH + LOGO_TEXT_GAP + maxTextWidth;
+  // Calculate total width and center it (only include logo width when present)
+  const totalWidth = hasLogo
+    ? LOGO_WIDTH + LOGO_TEXT_GAP + maxTextWidth
+    : maxTextWidth;
   const startX = (PAGE_WIDTH - totalWidth) / 2;
 
-  if (fs.existsSync(logoPath)) {
-    // Place logo centered
+  if (hasLogo && logoPath) {
     doc.image(logoPath, startX, y, {
       height: LOGO_HEIGHT,
       width: LOGO_WIDTH,
     });
   }
 
-  y += LOGO_TEXT_VERTICAL_OFFSET;
+  if (hasLogo) {
+    y += LOGO_TEXT_VERTICAL_OFFSET;
+  }
 
-  // From Address (to the right of logo)
-  const fromX = startX + LOGO_WIDTH + LOGO_TEXT_GAP;
-  doc.font('Inter-Bold').text(BUSINESS_INFO.name, fromX, y);
+  // From Address (to the right of logo, or centered when no logo)
+  const fromX = hasLogo ? startX + LOGO_WIDTH + LOGO_TEXT_GAP : startX;
+  doc.font('Inter-Bold').text(companyName, fromX, y);
   y += SECTION_LINE_HEIGHT;
 
-  y += SECTION_LINE_HEIGHT;
-  doc
-    .font('Inter')
-    .text(BUSINESS_INFO.street, fromX, y - SECTION_LINE_HEIGHT)
-    .text(cityStateZip, fromX, y);
+  doc.font('Inter');
+  for (const line of addressLines) {
+    doc.text(line, fromX, y);
+    y += SECTION_LINE_HEIGHT;
+  }
 
   // Move past the logo section
   y = Math.max(y + LINE_HEIGHT, MARGIN + LOGO_HEIGHT + SECTION_SPACING);

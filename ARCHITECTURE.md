@@ -41,14 +41,14 @@ The script runs on a **Raspberry Pi Zero 2 W** (aarch64, 512MB RAM) connected vi
 
 On every merge to `main`, GitHub Actions:
 1. Bundles `src/index.ts` and all dependencies into a single JS file using `@vercel/ncc`
-2. Publishes the bundle as a GitHub Release asset (`bundle.js`)
+2. Publishes the bundle as a GitHub Release asset (`index.js`)
 
 See issue #26 for implementation status.
 
 ### Pi Cron Job
 
 ```
-curl -fsSL https://github.com/brianespinosa/shippo-packing-slips/releases/latest/download/bundle.js | node -
+curl -fsSL https://github.com/brianespinosa/shippo-packing-slips/releases/latest/download/index.js | node -
 ```
 
 No git, yarn, or npm required on the Pi — only `node` and `curl`.
