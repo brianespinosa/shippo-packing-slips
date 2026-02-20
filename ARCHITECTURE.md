@@ -6,7 +6,7 @@ A single Node.js script that runs on a schedule via cron on a Raspberry Pi Zero 
 
 ## What It Does
 
-Each cron run performs two jobs over a configurable time window (default: last 24 hours):
+Each cron run performs two jobs over a configurable time window (default: last 60 minutes):
 
 1. **Packing slips** — Fetch PAID orders from Shippo → generate PDF → print via `lp` → delete temp file
 2. **Shipping labels** — Fetch shipments with Shippo labels → download label PDF → print via `lp` → delete temp file
@@ -24,10 +24,11 @@ Temp files are written to `/tmp` and removed immediately after printing.
 
 ```
 src/
-  index.ts          ← single entry point, orchestrates both jobs
+  index.ts           ← single entry point, orchestrates both jobs
   lib/
-    shippo.ts       ← fetchOrders(), fetchShipments()
     pdf-generator.ts ← generatePackingSlip()
+    printer.ts       ← printPDF() via CUPS lp command
+    shippo.ts        ← fetchOrders(), fetchTransactions()
 ```
 
 Test scripts (`test-shippo.ts`, `test-pdf.ts`) are for local development only and are excluded from the production bundle.
@@ -58,7 +59,10 @@ The script requires a `.env` file on the Pi with:
 
 ```
 SHIPPO_API_TOKEN=shippo_live_...
+CUPS_PRINTER_NAME=Knaon
 ```
+
+See `.env.example` for all available variables.
 
 ## Printer
 
