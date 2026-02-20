@@ -1,6 +1,5 @@
-import type { Order, OrderStatusEnum } from 'shippo/models/components';
-
 import { Shippo } from 'shippo';
+import type { Order, OrderStatusEnum } from 'shippo/models/components';
 
 /**
  * Initialize Shippo client with API token from environment
