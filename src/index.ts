@@ -98,7 +98,7 @@ async function runLabelsJob(
   startDate: Date,
   endDate: Date,
 ): Promise<{ success: number; errors: number }> {
-  console.log('Fetching shipping labels...');
+  console.log('Fetching transactions and downloading labels...');
 
   try {
     const transactions = await fetchTransactions(startDate, endDate);
