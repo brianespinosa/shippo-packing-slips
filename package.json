@@ -20,7 +20,7 @@
     "check": "biome check --write ./",
     "clean": "rm -rf dist",
     "dev": "tsc --watch",
-    "generate": "yarn build && node dist/generate-real-pdfs.js",
+    "generate": "yarn build && node dist/index.js",
     "postinstall": "lefthook install",
     "sort-package": "yarn dlx sort-package-json",
     "test:api": "yarn build && node dist/test-shippo.js",
