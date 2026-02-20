@@ -2,7 +2,11 @@
 
 ## Workflows
 
-No active workflows are currently configured.
+### Active Workflows
+
+**biome.yml** — Runs `yarn biome ci ./` on PRs targeting `main`. Enforces linting and formatting via Biome.
+
+**typecheck.yml** — Runs `yarn typecheck` (`tsc --noEmit`) on PRs targeting `main`. Enforces TypeScript type correctness.
 
 ### Disabled Workflows
 

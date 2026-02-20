@@ -1,8 +1,8 @@
-import { exec } from 'child_process';
+import { exec } from 'node:child_process';
+import path from 'node:path';
+import { promisify } from 'node:util';
 import dotenv from 'dotenv';
-import path from 'path';
 import { OrderStatusEnum } from 'shippo/models/components';
-import { promisify } from 'util';
 
 import { generatePackingSlip } from './lib/pdf-generator';
 import { fetchOrders } from './lib/shippo';
@@ -59,7 +59,7 @@ async function generateRealPDFs() {
 
     // Create output directory if it doesn't exist
     const outputDir = path.join(process.cwd(), 'output');
-    const fs = await import('fs/promises');
+    const fs = await import('node:fs/promises');
     await fs.mkdir(outputDir, { recursive: true });
 
     // Generate PDF for each order

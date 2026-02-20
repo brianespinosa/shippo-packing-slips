@@ -1,9 +1,8 @@
+import fs from 'node:fs';
+import path from 'node:path';
 import type PDFKit from 'pdfkit';
-import type { Order } from 'shippo/models/components';
-
-import fs from 'fs';
-import path from 'path';
 import PDFDocument from 'pdfkit';
+import type { Order } from 'shippo/models/components';
 
 /**
  * Page dimensions for 4x6 inch label
@@ -212,10 +211,11 @@ function renderHeader(
   doc.font('Inter-Bold').text(BUSINESS_INFO.name, fromX, y);
   y += SECTION_LINE_HEIGHT;
 
+  y += SECTION_LINE_HEIGHT;
   doc
     .font('Inter')
-    .text(BUSINESS_INFO.street, fromX, y)
-    .text(cityStateZip, fromX, (y += SECTION_LINE_HEIGHT));
+    .text(BUSINESS_INFO.street, fromX, y - SECTION_LINE_HEIGHT)
+    .text(cityStateZip, fromX, y);
 
   // Move past the logo section
   y = Math.max(y + LINE_HEIGHT, MARGIN + LOGO_HEIGHT + SECTION_SPACING);
