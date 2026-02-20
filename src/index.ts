@@ -233,4 +233,7 @@ async function run() {
   process.exit(combinedErrors > 0 ? 1 : 0);
 }
 
-void run();
+run().catch((error) => {
+  console.error('Fatal error:', error);
+  process.exit(1);
+});
