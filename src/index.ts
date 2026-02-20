@@ -4,6 +4,7 @@ import dotenv from 'dotenv';
 import { OrderStatusEnum } from 'shippo/models/components';
 
 import { generatePackingSlip } from './lib/pdf-generator';
+import { printPDF } from './lib/printer';
 import { fetchOrders, fetchTransactions } from './lib/shippo';
 
 // Load environment variables (.env.local overrides .env)
@@ -58,7 +59,8 @@ async function runPackingSlipsJob(
         console.log(`  Items: ${order.lineItems?.length || 0}`);
         console.log(`  Ship to: ${order.toAddress?.name || 'N/A'}`);
 
-        // TODO (#5): print PDF before deleting
+        await printPDF(outputPath);
+        console.log(`  Printed: ${path.basename(outputPath)}`);
         try {
           await unlink(outputPath);
         } catch (_cleanupError) {
@@ -70,8 +72,8 @@ async function runPackingSlipsJob(
       } catch (error) {
         // A partial or empty file may have been written to outputPath before
         // the error was thrown. It will be cleaned up by the OS eventually
-        // since it is in /tmp. (#5 will supersede this when print+delete lands)
-        console.error(`✗ Failed to generate PDF for order ${orderNumber}`);
+        // since it is in /tmp.
+        console.error(`✗ Failed to process order ${orderNumber}`);
         if (error instanceof Error) {
           console.error(`  Error: ${error.message}`);
         } else {
@@ -144,7 +146,8 @@ async function runLabelsJob(
         console.log(`✓ Downloaded: ${path.basename(outputPath)}`);
         console.log(`  Tracking: ${tx.trackingNumber || 'N/A'}`);
 
-        // TODO (#5): print PDF before deleting
+        await printPDF(outputPath);
+        console.log(`  Printed: ${path.basename(outputPath)}`);
         try {
           await unlink(outputPath);
         } catch (_e) {
@@ -155,7 +158,7 @@ async function runLabelsJob(
         successCount++;
       } catch (error) {
         // A partial file may have been written before the error; /tmp is cleaned by OS
-        console.error(`✗ Failed to download label for transaction ${objectId}`);
+        console.error(`✗ Failed to process label for transaction ${objectId}`);
         if (error instanceof Error) {
           console.error(`  Error: ${error.message}`);
         } else {
@@ -184,6 +187,11 @@ async function run() {
   if (!apiToken) {
     console.error('Error: SHIPPO_API_TOKEN not found in environment');
     console.error('Please add your production API token');
+    process.exit(2);
+  }
+
+  if (!process.env.CUPS_PRINTER_NAME) {
+    console.error('Error: CUPS_PRINTER_NAME not found in environment');
     process.exit(2);
   }
 
