@@ -41,6 +41,7 @@ yarn generate                      # fetch orders and generate PDFs
 |---|---|
 | `SHIPPO_API_TOKEN` | Shippo production API token |
 | `SHIPPO_TEST_API_TOKEN` | Shippo test token (optional, for test scripts) |
+| `CRON_TIME_WINDOW_MINUTES` | Minutes to look back on each cron run (default: 60) |
 
 Values in `.env.local` override `.env`.
 
