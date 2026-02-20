@@ -1,6 +1,7 @@
 import { exec } from 'child_process';
 import dotenv from 'dotenv';
 import path from 'path';
+import { OrderStatusEnum } from 'shippo/models/components';
 import { promisify } from 'util';
 
 import { generatePackingSlip } from './lib/pdf-generator';
@@ -8,8 +9,9 @@ import { fetchOrders } from './lib/shippo';
 
 const execAsync = promisify(exec);
 
-// Load environment variables
-dotenv.config({ path: '.env.local' });
+// Load environment variables (.env.local overrides .env)
+dotenv.config();
+dotenv.config({ override: true, path: '.env.local' });
 
 /**
  * Generate packing slip PDFs for real orders from Shippo
@@ -29,8 +31,12 @@ async function generateRealPDFs() {
   // Calculate date range (last 24 hours by default)
   const endDate = new Date();
   const startDate = new Date();
-  const hoursBack = 24; // Can be adjusted as needed
+  const hoursBack = 120; // Can be adjusted as needed
   startDate.setHours(startDate.getHours() - hoursBack);
+
+  // Filter by order status (PAID = orders that need packing slips)
+  // Set to undefined to fetch all statuses
+  const statusFilter = [OrderStatusEnum.Paid];
 
   console.log('Fetching orders from:');
   console.log('  Start:', startDate.toISOString());
@@ -39,7 +45,7 @@ async function generateRealPDFs() {
 
   try {
     // Fetch orders from Shippo
-    const orders = await fetchOrders(startDate, endDate);
+    const orders = await fetchOrders(startDate, endDate, statusFilter);
 
     if (orders.length === 0) {
       console.log('No orders found in the specified date range.');
@@ -63,15 +69,27 @@ async function generateRealPDFs() {
     for (const order of orders) {
       const orderNumber = order.orderNumber || order.objectId || 'unknown';
       const sanitizedOrderNumber = orderNumber.replace(/[^a-zA-Z0-9-_]/g, '_');
+
+      // Extract and format the order date as YYYY-MM-DD
+      let datePrefix = 'unknown-date';
+      if (order.placedAt) {
+        const orderDate = new Date(order.placedAt);
+        const year = orderDate.getFullYear();
+        const month = String(orderDate.getMonth() + 1).padStart(2, '0');
+        const day = String(orderDate.getDate()).padStart(2, '0');
+        datePrefix = `${year}-${month}-${day}`;
+      }
+
       const outputPath = path.join(
         outputDir,
-        `packing-slip-${sanitizedOrderNumber}.pdf`,
+        `packing-slip-${datePrefix}-${sanitizedOrderNumber}.pdf`,
       );
 
       try {
         await generatePackingSlip(order, outputPath);
         console.log(`✓ Generated: ${path.basename(outputPath)}`);
         console.log(`  Order: ${orderNumber}`);
+        console.log(`  Status: ${order.orderStatus || 'UNKNOWN'}`);
         console.log(`  Items: ${order.lineItems?.length || 0}`);
         console.log(`  Ship to: ${order.toAddress?.name || 'N/A'}`);
 
