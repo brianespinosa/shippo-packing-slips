@@ -10,15 +10,16 @@ See `ARCHITECTURE.md` for full system design.
 
 Features are being implemented in this order:
 
-1. **[#30] Refactor into single entry point** — consolidate `src/index.ts`, write PDFs to `/tmp`, clean up after printing
-2. **[#31] Shipping label printing** — fetch Shippo labels for the time window, download, print, and clean up
-3. **[#5] CUPS printer integration** — send PDFs to the Knaon via `lp`
-4. **[#6] Error handling and logging** — consistent exit codes and cron-friendly output
-5. **[#8] Cron setup on Pi** — configure the scheduled job on the Raspberry Pi
-6. **[#33] Add `.env.example`** — template for local and Pi setup
-7. **[#32] Make repository public** — prerequisite for the CD pipeline
-8. **[#26] CD pipeline** — bundle with `ncc`, publish to GitHub Releases on merge to `main`
-9. **[#9] Deployment guide** — reproduce the full Pi provisioning from scratch
+1. **[#35](https://github.com/brianespinosa/shippo-packing-slips/issues/35) Dev toolchain** — replace ESLint + Prettier with Biome, add Lefthook pre-commit hooks, add CI workflow for lint and typecheck
+2. **[#30](https://github.com/brianespinosa/shippo-packing-slips/issues/30) Refactor into single entry point** — consolidate `src/index.ts`, write PDFs to `/tmp`, clean up after printing
+3. **[#31](https://github.com/brianespinosa/shippo-packing-slips/issues/31) Shipping label printing** — fetch Shippo labels for the time window, download, print, and clean up
+4. **[#5](https://github.com/brianespinosa/shippo-packing-slips/issues/5) CUPS printer integration** — send PDFs to the Knaon via `lp`
+5. **[#6](https://github.com/brianespinosa/shippo-packing-slips/issues/6) Error handling and logging** — consistent exit codes and cron-friendly output
+6. **[#8](https://github.com/brianespinosa/shippo-packing-slips/issues/8) Cron setup on Pi** — configure the scheduled job on the Raspberry Pi
+7. **[#33](https://github.com/brianespinosa/shippo-packing-slips/issues/33) Add `.env.example`** — template for local and Pi setup
+8. **[#32](https://github.com/brianespinosa/shippo-packing-slips/issues/32) Make repository public** — prerequisite for the CD pipeline
+9. **[#26](https://github.com/brianespinosa/shippo-packing-slips/issues/26) CD pipeline** — bundle with `ncc`, publish to GitHub Releases on merge to `main`
+10. **[#9](https://github.com/brianespinosa/shippo-packing-slips/issues/9) Deployment guide** — reproduce the full Pi provisioning from scratch
 
 ## Requirements
 
