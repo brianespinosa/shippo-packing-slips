@@ -2,8 +2,9 @@ import dotenv from 'dotenv';
 
 import { fetchOrders } from './lib/shippo';
 
-// Load environment variables
-dotenv.config({ path: '.env.local' });
+// Load environment variables (.env.local overrides .env)
+dotenv.config();
+dotenv.config({ override: true, path: '.env.local' });
 
 /**
  * Test script to verify Shippo API connectivity
