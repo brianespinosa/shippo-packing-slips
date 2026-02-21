@@ -1,0 +1,16 @@
+name: Setup Node and install dependencies
+description: Sets up Node.js via .nvmrc, enables corepack, and installs dependencies. Requires checkout to have already run.
+
+runs:
+  using: composite
+  steps:
+    - name: Setup Node
+      uses: actions/setup-node@v6
+      with:
+        node-version-file: .nvmrc
+    - name: Enable corepack
+      shell: bash
+      run: corepack enable
+    - name: Install dependencies
+      shell: bash
+      run: yarn install --immutable

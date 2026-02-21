@@ -18,6 +18,14 @@
 - Disabled by changing extension from `.yml` to `.disabled`
 - Can be re-enabled by renaming back to `auto-merge.yml`
 
+## Composite Actions
+
+### `.github/actions/setup`
+
+Shared setup sequence used by all three workflows. Encapsulates: Node.js setup via `.nvmrc`, corepack enable, and `yarn install --immutable`.
+
+**Important**: Local composite actions cannot self-checkout — the runner workspace must already contain the repo when GitHub resolves the action definition. Each calling workflow must run `actions/checkout` as its first step before `uses: ./.github/actions/setup`.
+
 ## Common Tasks
 
 **Debug failures**: Check Actions tab logs for workflow execution details when workflows are added
