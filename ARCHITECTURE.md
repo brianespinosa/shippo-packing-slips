@@ -51,7 +51,7 @@ Inter font files (`Inter-Regular.ttf`, `Inter-Bold.ttf`) are **not** published i
 The cron job runs at the top of every hour. The command must `cd` to the home directory first so that `dotenv` finds `~/.env`:
 
 ```
-0 * * * * cd /home/bje && node /home/bje/bundle/index.js >> /home/bje/cron.log 2>&1
+0 * * * * cd "$HOME" && node "$HOME/bundle/index.js" >> "$HOME/cron.log" 2>&1
 ```
 
 To install or edit: `crontab -e`. Output is appended to `~/cron.log`.
