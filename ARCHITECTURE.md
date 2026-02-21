@@ -15,7 +15,7 @@ Temp files are written to `/tmp` and removed immediately after printing.
 
 ## Stack
 
-- **Runtime**: Node.js 24 (TypeScript, compiled via `tsc`)
+- **Runtime**: Node.js 24 (TypeScript, bundled via `@vercel/ncc`)
 - **PDF generation**: PDFKit (packing slips only; shipping labels are fetched as PDFs from Shippo)
 - **Printing**: CUPS (`lp` command)
 - **API**: Shippo SDK
@@ -31,7 +31,6 @@ src/
     shippo.ts        ← fetchOrders(), fetchTransactions()
 ```
 
-Test scripts (`test-shippo.ts`, `test-pdf.ts`) are for local development only and are excluded from the production bundle.
 
 ## Deployment
 
@@ -41,17 +40,47 @@ The script runs on a **Raspberry Pi Zero 2 W** (aarch64, 512MB RAM) connected vi
 
 On every merge to `main`, GitHub Actions:
 1. Bundles `src/index.ts` and all dependencies into a single JS file using `@vercel/ncc`
-2. Publishes the bundle as a GitHub Release asset (`index.js`)
+2. Publishes the bundle and its required assets as GitHub Release assets:
+   - `index.js` — the bundle
+   - `*.afm` + `sRGB_IEC61966_2_1.icc` — PDFKit font metrics and color profile
 
-See issue #26 for implementation status.
+Inter font files (`Inter-Regular.ttf`, `Inter-Bold.ttf`) are **not** published in the release — they are sourced directly from the [rsms/inter](https://github.com/rsms/inter) GitHub releases and placed on the Pi once during provisioning.
 
 ### Pi Cron Job
 
+The bundle and its asset files must be in the same directory. Download `index.js` to the bundle directory, then run it from there:
+
 ```
-curl -fsSL https://github.com/brianespinosa/shippo-packing-slips/releases/latest/download/index.js | node -
+curl -fsSL https://github.com/brianespinosa/shippo-packing-slips/releases/latest/download/index.js \
+  -o ~/bundle/index.js
+node ~/bundle/index.js
 ```
 
-No git, yarn, or npm required on the Pi — only `node` and `curl`.
+No git, yarn, or npm required on the Pi — only `node`, `curl`, and `unzip` (for initial provisioning).
+
+### Pi Provisioning (one-time setup)
+
+On first setup, the bundle directory must contain all static assets before the cron job runs. These files never change and only need to be downloaded once:
+
+```bash
+mkdir -p ~/bundle
+
+# PDFKit assets (from this project's GitHub releases)
+RELEASE_BASE=https://github.com/brianespinosa/shippo-packing-slips/releases/latest/download
+for f in Helvetica.afm Helvetica-Bold.afm Helvetica-BoldOblique.afm Helvetica-Oblique.afm \
+          Times-Roman.afm Times-Bold.afm Times-Italic.afm Times-BoldItalic.afm \
+          Courier.afm Courier-Bold.afm Courier-Oblique.afm Courier-BoldOblique.afm \
+          Symbol.afm ZapfDingbats.afm sRGB_IEC61966_2_1.icc; do
+  curl -fsSL "$RELEASE_BASE/$f" -o ~/bundle/"$f"
+done
+
+# Inter fonts (from rsms/inter GitHub releases)
+INTER_BASE=https://github.com/rsms/inter/releases/latest/download
+curl -fsSL "$INTER_BASE/Inter-4.1.zip" -o /tmp/inter.zip
+unzip -p /tmp/inter.zip extras/ttf/Inter-Regular.ttf > ~/bundle/Inter-Regular.ttf
+unzip -p /tmp/inter.zip extras/ttf/Inter-Bold.ttf > ~/bundle/Inter-Bold.ttf
+rm /tmp/inter.zip
+```
 
 ### Environment
 

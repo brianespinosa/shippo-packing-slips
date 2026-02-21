@@ -65,12 +65,8 @@ export async function generatePackingSlip(
       });
 
       // Register Inter fonts
-      const fontsDir = path.join(
-        process.cwd(),
-        'src/assets/fonts/inter/extras/ttf',
-      );
-      doc.registerFont('Inter', path.join(fontsDir, 'Inter-Regular.ttf'));
-      doc.registerFont('Inter-Bold', path.join(fontsDir, 'Inter-Bold.ttf'));
+      doc.registerFont('Inter', path.join(__dirname, 'Inter-Regular.ttf'));
+      doc.registerFont('Inter-Bold', path.join(__dirname, 'Inter-Bold.ttf'));
 
       // Pipe to output file
       const stream = fs.createWriteStream(outputPath);

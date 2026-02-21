@@ -56,10 +56,12 @@ Values in `.env.local` override `.env`.
 
 ## Deployment
 
-The script is deployed to a Raspberry Pi Zero 2 W. On every merge to `main`, GitHub Actions publishes a bundled release. The Pi cron job pulls and runs it directly:
+The script is deployed to a Raspberry Pi Zero 2 W. On every merge to `main`, GitHub Actions publishes a bundled release. The Pi downloads `index.js` to a local bundle directory and runs it from there (required so `node` can find font and PDFKit asset files in the same directory):
 
 ```
-curl -fsSL https://github.com/brianespinosa/shippo-packing-slips/releases/latest/download/index.js | node -
+curl -fsSL https://github.com/brianespinosa/shippo-packing-slips/releases/latest/download/index.js \
+  -o ~/bundle/index.js
+node ~/bundle/index.js
 ```
 
-See [issue #26](https://github.com/brianespinosa/shippo-packing-slips/issues/26) for CD pipeline implementation status.
+See `ARCHITECTURE.md` for full provisioning instructions including one-time asset setup.

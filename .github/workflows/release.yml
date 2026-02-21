@@ -32,4 +32,9 @@ jobs:
         with:
           tag_name: latest
           make_latest: true
-          files: dist/bundle/index.js
+          # Inter font files (Inter-Regular.ttf, Inter-Bold.ttf) are intentionally
+          # excluded — they are sourced directly from rsms/inter during Pi provisioning.
+          files: |
+            dist/bundle/index.js
+            dist/bundle/*.afm
+            dist/bundle/sRGB_IEC61966_2_1.icc
