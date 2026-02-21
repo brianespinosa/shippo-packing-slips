@@ -22,9 +22,9 @@
 
 ### `.github/actions/setup`
 
-Shared setup sequence used by all three workflows. Encapsulates: checkout, Node.js setup via `.nvmrc`, corepack enable, and `yarn install --immutable`.
+Shared setup sequence used by all three workflows. Encapsulates: Node.js setup via `.nvmrc`, corepack enable, and `yarn install --immutable`.
 
-Reference with `uses: ./.github/actions/setup` (no `with` inputs required).
+**Important**: Local composite actions cannot self-checkout — the runner workspace must already contain the repo when GitHub resolves the action definition. Each calling workflow must run `actions/checkout` as its first step before `uses: ./.github/actions/setup`.
 
 ## Common Tasks
 
