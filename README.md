@@ -47,7 +47,7 @@ Values in `.env.local` override `.env`.
 The script is deployed to a Raspberry Pi Zero 2 W. On every merge to `main`, GitHub Actions publishes a bundled release. The Pi runs `index.js` on a cron schedule from `~/`:
 
 ```
-0 * * * * cd /home/bje && node /home/bje/bundle/index.js >> /home/bje/cron.log 2>&1
+0 * * * * cd "$HOME" && node "$HOME/bundle/index.js" >> "$HOME/cron.log" 2>&1
 ```
 
 To update after a new release:
