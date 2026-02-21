@@ -21,11 +21,10 @@
     "check": "biome check --write ./",
     "clean": "rm -rf dist",
     "dev": "tsc --watch",
-    "generate": "yarn build && node dist/index.js",
+    "download:fonts": "node scripts/download-fonts.mjs",
+    "generate": "yarn build:bundle && yarn download:fonts && node dist/bundle/index.js",
     "postinstall": "lefthook install",
     "sort-package": "yarn dlx sort-package-json",
-    "test:api": "yarn build && node dist/test-shippo.js",
-    "test:pdf": "yarn build && node dist/test-pdf.js",
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {
