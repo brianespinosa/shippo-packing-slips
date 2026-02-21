@@ -4,14 +4,15 @@ on:
   pull_request:
     branches: [main]
 
+concurrency:
+  group: ${{ github.workflow }}-${{ github.event.pull_request.number }}
+  cancel-in-progress: true
+
 jobs:
   typecheck:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v6
-      - uses: actions/setup-node@v6
-        with:
-          node-version-file: .nvmrc
-      - run: corepack enable
-      - run: yarn install --frozen-lockfile
-      - run: yarn typecheck
+      - name: Setup
+        uses: ./.github/actions/setup
+      - name: Run TypeCheck
+        run: yarn typecheck

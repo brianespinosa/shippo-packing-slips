@@ -18,6 +18,14 @@
 - Disabled by changing extension from `.yml` to `.disabled`
 - Can be re-enabled by renaming back to `auto-merge.yml`
 
+## Composite Actions
+
+### `.github/actions/setup`
+
+Shared setup sequence used by all three workflows. Encapsulates: checkout, Node.js setup via `.nvmrc`, corepack enable, and `yarn install --immutable`.
+
+Reference with `uses: ./.github/actions/setup` (no `with` inputs required).
+
 ## Common Tasks
 
 **Debug failures**: Check Actions tab logs for workflow execution details when workflows are added
