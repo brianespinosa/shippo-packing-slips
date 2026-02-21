@@ -81,9 +81,13 @@ for f in Helvetica.afm Helvetica-Bold.afm Helvetica-BoldOblique.afm Helvetica-Ob
   curl -fsSL "$RELEASE_BASE/$f" -o ~/bundle/"$f"
 done
 
-# Inter fonts (from rsms/inter GitHub releases)
-INTER_BASE=https://github.com/rsms/inter/releases/latest/download
-curl -fsSL "$INTER_BASE/Inter-4.1.zip" -o /tmp/inter.zip
+# Inter fonts (from rsms/inter GitHub releases — fetches latest version dynamically)
+INTER_ZIP_URL=$(curl -fsSL \
+  -H "User-Agent: shippo-packing-slips" \
+  "https://api.github.com/repos/rsms/inter/releases/latest" \
+  | grep -o '"browser_download_url":"[^"]*\.zip"' \
+  | grep -o 'https://[^"]*')
+curl -fsSL "$INTER_ZIP_URL" -o /tmp/inter.zip
 unzip -p /tmp/inter.zip extras/ttf/Inter-Regular.ttf > ~/bundle/Inter-Regular.ttf
 unzip -p /tmp/inter.zip extras/ttf/Inter-Bold.ttf > ~/bundle/Inter-Bold.ttf
 rm /tmp/inter.zip
@@ -106,4 +110,4 @@ See `.env.example` for all available variables.
 - **Hardware**: Knaon thermal printer (USB)
 - **Format**: 4x6 inch labels
 - **Interface**: CUPS (`lp -d <printer-name>`)
-- **Color**: Black and white only (logo converted to grayscale)
+- **Color**: Black and white only (thermal printer hardware limitation; no software conversion)
