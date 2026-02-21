@@ -48,12 +48,19 @@ Inter font files (`Inter-Regular.ttf`, `Inter-Bold.ttf`) are **not** published i
 
 ### Pi Cron Job
 
-The bundle and its asset files must be in the same directory. Download `index.js` to the bundle directory, then run it from there:
+The cron job runs at the top of every hour. The command must `cd` to the home directory first so that `dotenv` finds `~/.env`:
 
 ```
+0 * * * * cd /home/bje && node /home/bje/bundle/index.js >> /home/bje/cron.log 2>&1
+```
+
+To install or edit: `crontab -e`. Output is appended to `~/cron.log`.
+
+To update the bundle after a new release:
+
+```bash
 curl -fsSL https://github.com/brianespinosa/shippo-packing-slips/releases/latest/download/index.js \
   -o ~/bundle/index.js
-node ~/bundle/index.js
 ```
 
 No git, yarn, or npm required on the Pi — only `node`, `curl`, and `unzip` (for initial provisioning).
@@ -84,11 +91,12 @@ rm /tmp/inter.zip
 
 ### Environment
 
-The script requires a `.env` file on the Pi with:
+The script requires a `~/.env` file in the Pi user's home directory (not `~/bundle/`). `dotenv` resolves `.env` relative to the working directory, and the cron job runs from `~`.
 
 ```
 SHIPPO_API_TOKEN=shippo_live_...
 CUPS_PRINTER_NAME=Knaon
+COMPANY_NAME=...
 ```
 
 See `.env.example` for all available variables.
