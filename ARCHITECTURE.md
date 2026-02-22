@@ -48,9 +48,16 @@ Inter font files (`Inter-Regular.ttf`, `Inter-Bold.ttf`) are **not** published i
 
 ### Pi Cron Job
 
-The cron job runs at the top of every hour. The command must `cd` to the home directory first so that `dotenv` finds `~/.env`:
+The Pi's system timezone must be set to UTC to avoid DST-related cron skips or double-fires:
+
+```bash
+sudo timedatectl set-timezone UTC
+```
+
+The cron job runs at the top of every hour. The command must `cd` to the home directory first so that `dotenv` finds `~/.env`. A `PATH` line is required because cron's default PATH (`/usr/bin:/bin`) does not include `/usr/local/bin` where the `node` symlink lives:
 
 ```
+PATH=/usr/local/bin:/usr/bin:/bin
 0 * * * * cd "$HOME" && node "$HOME/bundle/index.js" >> "$HOME/cron.log" 2>&1
 ```
 
@@ -68,6 +75,14 @@ No git, yarn, or npm required on the Pi — only `node`, `curl`, and `unzip` (fo
 ### Pi Provisioning (one-time setup)
 
 On first setup, the bundle directory must contain all static assets before the cron job runs. These files never change and only need to be downloaded once:
+
+After installing Node.js, create a stable symlink so `node` is available on cron's default PATH:
+
+```bash
+sudo ln -sf "$(which node)" /usr/local/bin/node
+```
+
+Re-run this command after upgrading Node.js.
 
 ```bash
 mkdir -p ~/bundle
