@@ -203,7 +203,10 @@ async function run() {
     process.exit(2);
   }
 
-  // Calculate a date window aligned to the start of the current hour
+  // Calculate a date window aligned to the nearest interval boundary.
+  // CRON_TIME_WINDOW_MINUTES must evenly divide 1440 (minutes in a day) so that
+  // boundaries are fixed points in time anchored to UTC midnight, making the window
+  // deterministic regardless of when within the interval the script actually starts.
   const timeWindowMinutes = parseInt(
     process.env.CRON_TIME_WINDOW_MINUTES ?? '60',
     10,
@@ -214,9 +217,18 @@ async function run() {
     );
     process.exit(2);
   }
-  const endDate = new Date();
-  endDate.setMinutes(0, 0, 0); // zero out minutes, seconds, and milliseconds
-  const startDate = new Date(endDate.getTime() - timeWindowMinutes * 60 * 1000);
+  if (1440 % timeWindowMinutes !== 0) {
+    console.error(
+      `Error: CRON_TIME_WINDOW_MINUTES must evenly divide 1440 (minutes in a day), got: ${timeWindowMinutes}`,
+    );
+    process.exit(2);
+  }
+  const now = new Date();
+  const msPerWindow = timeWindowMinutes * 60 * 1000;
+  const endDate = new Date(
+    Math.floor(now.getTime() / msPerWindow) * msPerWindow,
+  );
+  const startDate = new Date(endDate.getTime() - msPerWindow);
 
   console.log('Date range:');
   console.log('  Start:', startDate.toISOString());
