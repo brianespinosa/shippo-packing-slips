@@ -54,11 +54,15 @@ The Pi's system timezone must be set to UTC to avoid DST-related cron skips or d
 sudo timedatectl set-timezone UTC
 ```
 
-The cron job runs at the top of every hour. The command must `cd` to the home directory first so that `dotenv` finds `~/.env`. A `PATH` line is required because cron's default PATH (`/usr/bin:/bin`) does not include `/usr/local/bin` where the `node` symlink lives:
+The cron schedule must match `CRON_TIME_WINDOW_MINUTES`. The script floors each run to the nearest window boundary anchored to UTC midnight, so the window is deterministic regardless of when within the interval the script starts. `CRON_TIME_WINDOW_MINUTES` must evenly divide 1440 (minutes in a day) — the script exits with an error otherwise.
+
+The command must `cd` to the home directory first so that `dotenv` finds `~/.env`. A `PATH` line is required because cron's default PATH (`/usr/bin:/bin`) does not include `/usr/local/bin` where the `node` symlink lives.
+
+Example for a 30-minute window (`CRON_TIME_WINDOW_MINUTES=30`):
 
 ```
 PATH=/usr/local/bin:/usr/bin:/bin
-0 * * * * cd "$HOME" && node "$HOME/bundle/index.js" >> "$HOME/cron.log" 2>&1
+0,30 * * * * cd "$HOME" && node "$HOME/bundle/index.js" >> "$HOME/cron.log" 2>&1
 ```
 
 To install or edit: `crontab -e`. Output is appended to `~/cron.log`.
