@@ -1,4 +1,4 @@
-import { unlink, writeFile } from 'node:fs/promises';
+import { access, constants, unlink, writeFile } from 'node:fs/promises';
 import path from 'node:path';
 import dotenv from 'dotenv';
 import { OrderStatusEnum } from 'shippo/models/components';
@@ -14,7 +14,7 @@ dotenv.config({ override: true, path: '.env.local' });
 async function runPackingSlipsJob(
   startDate: Date,
   endDate: Date,
-): Promise<{ success: number; errors: number }> {
+): Promise<{ success: number; errors: number; skipped: number }> {
   console.log('Fetching orders and generating packing slips...');
 
   const statusFilter =
@@ -27,13 +27,14 @@ async function runPackingSlipsJob(
 
     if (orders.length === 0) {
       console.log('No orders found in the specified date range.\n');
-      return { success: 0, errors: 0 };
+      return { success: 0, errors: 0, skipped: 0 };
     }
 
     console.log(`✓ Found ${orders.length} order(s)\n`);
 
     let successCount = 0;
     let errorCount = 0;
+    let skippedCount = 0;
 
     for (const order of orders) {
       const orderNumber = order.orderNumber || order.objectId || 'unknown';
@@ -55,6 +56,42 @@ async function runPackingSlipsJob(
       );
 
       try {
+        try {
+          await access(outputPath, constants.F_OK);
+          // File exists — was submitted to the print queue in a previous run
+          console.log(
+            `↩ Skipped (already printed): ${path.basename(outputPath)}`,
+          );
+          console.log(`  Order: ${orderNumber}`);
+          console.log('');
+          try {
+            await unlink(outputPath);
+          } catch (cleanupError) {
+            const code =
+              (cleanupError as NodeJS.ErrnoException).code ?? 'unknown';
+            const msg =
+              cleanupError instanceof Error
+                ? cleanupError.message
+                : String(cleanupError);
+            console.warn(
+              `  Warning: failed to delete sentinel file ${outputPath} [${code}]: ${msg}`,
+            );
+          }
+          // skippedCount counts items identified as already submitted to the
+          // print queue, regardless of whether sentinel cleanup succeeded.
+          skippedCount++;
+          continue;
+        } catch (accessError) {
+          if ((accessError as NodeJS.ErrnoException).code !== 'ENOENT') {
+            const code =
+              (accessError as NodeJS.ErrnoException).code ?? 'unknown';
+            throw new Error(
+              `Sentinel check failed for ${path.basename(outputPath)} [${code}]: ${accessError instanceof Error ? accessError.message : String(accessError)}`,
+            );
+          }
+          // ENOENT — file does not exist; proceed to generate and print
+        }
+
         await generatePackingSlip(order, outputPath);
         console.log(`✓ Generated: ${path.basename(outputPath)}`);
         console.log(`  Order: ${orderNumber}`);
@@ -64,12 +101,7 @@ async function runPackingSlipsJob(
 
         await printPDF(outputPath);
         console.log(`  Printed: ${path.basename(outputPath)}`);
-        try {
-          await unlink(outputPath);
-        } catch (_cleanupError) {
-          console.warn(`  Warning: failed to delete temp file ${outputPath}`);
-        }
-
+        // Leave file on disk as deduplication sentinel for the lookback window
         console.log('');
         successCount++;
       } catch (error) {
@@ -87,7 +119,7 @@ async function runPackingSlipsJob(
       }
     }
 
-    return { success: successCount, errors: errorCount };
+    return { success: successCount, errors: errorCount, skipped: skippedCount };
   } catch (error) {
     console.error('✗ Failed to fetch or process orders\n');
     if (error instanceof Error) {
@@ -95,14 +127,14 @@ async function runPackingSlipsJob(
     } else {
       console.error('Error:', error);
     }
-    return { success: 0, errors: 1 };
+    return { success: 0, errors: 1, skipped: 0 };
   }
 }
 
 async function runLabelsJob(
   startDate: Date,
   endDate: Date,
-): Promise<{ success: number; errors: number }> {
+): Promise<{ success: number; errors: number; skipped: number }> {
   console.log('Fetching transactions and downloading labels...');
 
   try {
@@ -110,13 +142,14 @@ async function runLabelsJob(
 
     if (transactions.length === 0) {
       console.log('No labels found in the specified date range.\n');
-      return { success: 0, errors: 0 };
+      return { success: 0, errors: 0, skipped: 0 };
     }
 
     console.log(`✓ Found ${transactions.length} label(s)\n`);
 
     let successCount = 0;
     let errorCount = 0;
+    let skippedCount = 0;
 
     for (const tx of transactions) {
       const objectId = (tx.objectId || 'unknown').replace(
@@ -141,6 +174,42 @@ async function runLabelsJob(
       );
 
       try {
+        try {
+          await access(outputPath, constants.F_OK);
+          // File exists — was submitted to the print queue in a previous run
+          console.log(
+            `↩ Skipped (already printed): ${path.basename(outputPath)}`,
+          );
+          console.log(`  Tracking: ${tx.trackingNumber || 'N/A'}`);
+          console.log('');
+          try {
+            await unlink(outputPath);
+          } catch (cleanupError) {
+            const code =
+              (cleanupError as NodeJS.ErrnoException).code ?? 'unknown';
+            const msg =
+              cleanupError instanceof Error
+                ? cleanupError.message
+                : String(cleanupError);
+            console.warn(
+              `  Warning: failed to delete sentinel file ${outputPath} [${code}]: ${msg}`,
+            );
+          }
+          // skippedCount counts items identified as already submitted to the
+          // print queue, regardless of whether sentinel cleanup succeeded.
+          skippedCount++;
+          continue;
+        } catch (accessError) {
+          if ((accessError as NodeJS.ErrnoException).code !== 'ENOENT') {
+            const code =
+              (accessError as NodeJS.ErrnoException).code ?? 'unknown';
+            throw new Error(
+              `Sentinel check failed for ${path.basename(outputPath)} [${code}]: ${accessError instanceof Error ? accessError.message : String(accessError)}`,
+            );
+          }
+          // ENOENT — file does not exist; proceed to download and print
+        }
+
         const res = await fetch(labelUrl);
         if (!res.ok) {
           throw new Error(`HTTP ${res.status} ${res.statusText}`);
@@ -151,16 +220,13 @@ async function runLabelsJob(
 
         await printPDF(outputPath);
         console.log(`  Printed: ${path.basename(outputPath)}`);
-        try {
-          await unlink(outputPath);
-        } catch (_e) {
-          console.warn(`  Warning: failed to delete temp file ${outputPath}`);
-        }
-
+        // Leave file on disk as deduplication sentinel for the lookback window
         console.log('');
         successCount++;
       } catch (error) {
-        // A partial file may have been written before the error; /tmp is cleaned by OS
+        // A partial or empty file may have been written to outputPath before
+        // the error was thrown. It will be cleaned up by the OS eventually
+        // since it is in /tmp.
         console.error(`✗ Failed to process label for transaction ${objectId}`);
         if (error instanceof Error) {
           console.error(`  Error: ${error.message}`);
@@ -172,7 +238,7 @@ async function runLabelsJob(
       }
     }
 
-    return { success: successCount, errors: errorCount };
+    return { success: successCount, errors: errorCount, skipped: skippedCount };
   } catch (error) {
     console.error('✗ Failed to fetch or process labels\n');
     if (error instanceof Error) {
@@ -180,7 +246,7 @@ async function runLabelsJob(
     } else {
       console.error('Error:', error);
     }
-    return { success: 0, errors: 1 };
+    return { success: 0, errors: 1, skipped: 0 };
   }
 }
 
@@ -228,9 +294,9 @@ async function run() {
   const endDate = new Date(
     Math.floor(now.getTime() / msPerWindow) * msPerWindow,
   );
-  const startDate = new Date(endDate.getTime() - msPerWindow);
+  const startDate = new Date(endDate.getTime() - 2 * msPerWindow); // 2x window (lookback for both jobs)
 
-  console.log('Date range:');
+  console.log('Date range (2x lookback window):');
   console.log('  Start:', startDate.toISOString());
   console.log('  End:  ', endDate.toISOString());
   console.log('');
@@ -243,10 +309,10 @@ async function run() {
   console.log('='.repeat(50));
   console.log('Summary:');
   console.log(
-    `  Packing slips: ${slipResults.success} generated, ${slipResults.errors} errors`,
+    `  Packing slips: ${slipResults.success} printed, ${slipResults.skipped} skipped (lookback), ${slipResults.errors} errors`,
   );
   console.log(
-    `  Labels:        ${labelResults.success} downloaded, ${labelResults.errors} errors`,
+    `  Labels:        ${labelResults.success} downloaded, ${labelResults.skipped} skipped (lookback), ${labelResults.errors} errors`,
   );
   console.log('='.repeat(50));
 

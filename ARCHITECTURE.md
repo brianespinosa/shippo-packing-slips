@@ -6,12 +6,41 @@ A single Node.js script that runs on a schedule via cron on a Raspberry Pi Zero 
 
 ## What It Does
 
-Each cron run performs two jobs over a configurable time window (default: last 60 minutes):
+Each cron run performs two jobs over a **2x lookback window** (default: last 2 × 60 minutes):
 
-1. **Packing slips** — Fetch PAID orders from Shippo → generate PDF → print via `lp` → delete temp file
-2. **Shipping labels** — Fetch shipments with Shippo labels → download label PDF → print via `lp` → delete temp file
+1. **Packing slips** — Fetch PAID orders from Shippo → check sentinel *(skip + delete if found)* → generate PDF → print via `lp` → leave file on disk as sentinel
+2. **Shipping labels** — Fetch shipments with Shippo labels → check sentinel *(skip + delete if found)* → download label PDF → print via `lp` → leave file on disk as sentinel
 
-Temp files are written to `/tmp` and removed immediately after printing.
+Temp files are written to `/tmp`. Files from the prior window are cleaned up when encountered as already-printed sentinels on the current run.
+
+## Design Principles
+
+The script is intentionally stateless — no database, no state file, no external tracking store. Deduplication is achieved using the PDF files already written to `/tmp` as ephemeral sentinels. No additional infrastructure is required.
+
+## Deduplication
+
+### The boundary timing problem
+
+Orders near a cron window boundary may not yet be `PAID` (or not yet synced to the Shippo API) when the cron fires. The next run's window has moved forward and no longer covers that order's timestamp — it is permanently missed.
+
+### Solution: 2x lookback + sentinel files
+
+Both jobs query a **2x window** (e.g., last 2 hours for a 60-minute cron). On each run:
+
+- If the PDF file for an item already exists in `/tmp`, it was printed in the previous run → skip it and delete the sentinel
+- If the file does not exist, print it and leave the file on disk for the next run to detect
+
+Under normal operation, this ensures every item in the trailing window gets a second chance to be processed without reprinting items that already went through.
+
+### Trade-offs and edge cases
+
+| Scenario | Behavior |
+|---|---|
+| Pi reboots between print run and cleanup run | `/tmp` is tmpfs and is cleared on reboot; items in the lookback zone may reprint once — acceptable trade-off for stateless operation |
+| `printPDF` fails after file write succeeds | Sentinel may or may not be on disk depending on whether the write completed before the error; next run skips if found, retries if not — consistent with existing no-retry behavior |
+| Manual re-run within same window | Second run finds sentinels, skips all — correct |
+| Order cancelled before lookback cleanup | Not returned by API; sentinel sits in `/tmp` until OS cleans it — benign |
+| Label download fails partway | No sentinel left (write failed); next run retries — correct |
 
 ## Stack
 
