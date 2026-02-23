@@ -96,18 +96,20 @@ PATH=/usr/local/bin:/usr/bin:/bin
 
 To install or edit: `crontab -e`. Output is appended to `~/cron.log`.
 
-To update the bundle after a new release:
-
-```bash
-curl -fsSL https://github.com/brianespinosa/shippo-packing-slips/releases/latest/download/index.js \
-  -o ~/bundle/index.js
-```
+To update the bundle after a new release, run `update-shippo` (alias configured during provisioning — see below).
 
 No git, yarn, or npm required on the Pi — only `node`, `curl`, and `unzip` (for initial provisioning).
 
 ### Pi Provisioning (one-time setup)
 
 On first setup, the bundle directory must contain all static assets before the cron job runs. These files never change and only need to be downloaded once:
+
+Add the `update-shippo` alias to `~/.bashrc` so future updates can be run with a single command:
+
+```bash
+echo "alias update-shippo='curl -fsSL https://github.com/brianespinosa/shippo-packing-slips/releases/latest/download/index.js -o ~/bundle/index.js'" >> ~/.bashrc
+source ~/.bashrc
+```
 
 After installing Node.js, create a stable symlink so `node` is available on cron's default PATH:
 
